@@ -1,0 +1,41 @@
+
+.container {
+    margin-top: 2%;
+}
+
+.container h1 {
+    text-align: center;
+}
+
+.container .row {
+    margin-top: 2%;
+}
+
+.json {
+    background: #f2f2f2;
+    padding: 2rem;
+    margin: 2rem;
+}
+
+.line {
+    margin-left: 1rem;
+}
+.key {
+    margin-right: 0.5rem;
+    color: black;
+    font-weight: 600;
+}
+.string {
+    color: green;
+}
+.number {
+    color: blue;
+}
+.boolean {
+    color: purple;
+}
+.null {
+    color: red;
+}
+
+  

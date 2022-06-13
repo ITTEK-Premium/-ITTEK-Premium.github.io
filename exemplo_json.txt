@@ -1,0 +1,32 @@
+{
+    "id": 1,
+    "role_id": 1,
+    "name": "admin",
+    "password": "admin",
+    "active": true
+  }
+
+{"id": 1,"role_id": 1,"name": "admin","password": "admin","active": true}
+
+
+{
+  "order_id": 2,
+  "client_name": "Neivacor",
+  "client_number": 123,
+  "state_description": "Encomenda a Espera de Amostra",
+  "hexadecimal": "C75A5A",
+  "total_progress": 4,
+  "current_progress": 2,
+  "certificates": [
+    {
+      "id": 1,
+      "description": "Oekotex",
+      "image": "certificates/oekotex.png"
+    },
+    {
+      "id": 2,
+      "description": "Gots",
+      "image": "certificates/gots.png"
+    }
+  ]
+}
