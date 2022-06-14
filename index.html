@@ -56,7 +56,9 @@
         </div>
 
         <div class="row">
-            <textarea id="textAreaResult" rows="15" placeholder="Nothing here"></textarea>
+            <div id="tabMenu" class="tab nav">
+            </div>
+            <textarea id="textAreaResult" class="tabcontent" rows="15" placeholder="Nothing here" style="display: block;"></textarea>
         </div>
 
     </div>
@@ -72,31 +74,7 @@
         convertButton.addEventListener("click", cc)
     </py-script>
 
-    <script>
-        function copyToClipBoard() {
-          /* Get the text field */
-          var copyText = document.getElementById("textAreaResult");
-        
-          /* Select the text field */
-          copyText.select();
-          copyText.setSelectionRange(0, 99999); /* For mobile devices */
-        
-          /* Copy the text inside the text field */
-          navigator.clipboard.writeText(copyText.value);
-        }
-
-        function changeModelType() {
-            selectModelType = document.getElementById("selectModelType")
-            selectedOption = selectModelType.value
-    
-            if (selectedOption == "kotlin") {
-                document.getElementById("inputPackage").style.display = 'block';
-            }
-            else {
-                document.getElementById("inputPackage").style.display = 'none';
-            }
-        }
-    </script>
+    <script src="js-scripts/utils.js"></script>
 
  </body>
 </html>
