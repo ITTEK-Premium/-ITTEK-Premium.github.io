@@ -1,4 +1,3 @@
-#from ..Js2Py.js2py.evaljs import *
 from utils import *
 from convertToFlutter import get_flutter_code
 from convertToKotlin import get_kotlin_code
@@ -20,5 +19,8 @@ def convert_json(event):
     elif (selected_option == "kotlin"):
         set_result(get_kotlin_code(selected_tab))
 
+    #js2py.eval_js('console.log( "Hello World!" )')
 
-    #eval_js('console.log( "Hello World!" )')
+    #result = parse('window.alert(1);')
+
+    #print(result)

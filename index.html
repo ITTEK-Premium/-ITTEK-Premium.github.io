@@ -14,17 +14,6 @@
     <script type="text/javascript" src="js_scripts/utils.js"></script>
     <script defer src="https://pyscript.net/alpha/pyscript.js"></script>
 
-    <py-env>
-        - paths:
-            - ./py_scripts/convertJsonToModel/convertJsonToModel.py
-            - ./py_scripts/convertJsonToModel/convertToFlutter.py
-            - ./py_scripts/convertJsonToModel/convertToKotlin.py
-            - ./py_scripts/convertJsonToModel/tabManager.py
-            - ./py_scripts/convertJsonToModel/utils.py
-    </py-env>
-    <!-- 
-        - Js2Py
-            - ./py_scripts/Js2Py/js2py/evaljs.py -->
 </head>
 
 <body>
@@ -96,6 +85,20 @@
 
     </div>
 
+    <!--
+        
+        - './static/wheels/Js2Py-0.71-py3-none-any.whl'
+        - './static/wheels/pyjsparser-2.7.1-py2-none-any.whl'
+    -->
+
+    <py-env>
+        - paths:
+            - ./py_scripts/convertJsonToModel/convertJsonToModel.py
+            - ./py_scripts/convertJsonToModel/convertToFlutter.py
+            - ./py_scripts/convertJsonToModel/convertToKotlin.py
+            - ./py_scripts/convertJsonToModel/tabManager.py
+            - ./py_scripts/convertJsonToModel/utils.py
+    </py-env>
     <py-script>
         from js import document
         from pyodide import create_proxy
