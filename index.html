@@ -11,8 +11,14 @@
     
     <script src="js_scripts/FileSaver.js/dist/FileSaver.js"></script>
     <script src="http://stuk.github.io/jszip/dist/jszip.min.js"></script>
+    <script type="text/javascript" src="js_scripts/prism.js"></script>
     <script type="text/javascript" src="js_scripts/utils.js"></script>
     <script defer src="https://pyscript.net/alpha/pyscript.js"></script>
+
+    <script src="https://unpkg.com/custom-syntax-highlighter@latest/bin/index.js"></script>
+    <script>
+      var highlight = window.csHighlight; //need to initialize the library
+    </script>
 
 </head>
 
@@ -36,7 +42,14 @@
         </div>
 
         <div class="row">
-            <textarea id="insertJsonArea" rows="8" placeholder="Insert Json"></textarea>
+            <div style="height: 200px;">
+                <textarea placeholder="Insert Json" id="insertJsonArea" spellcheck="false" oninput="updateJson(this.value); sync_scroll(this);" onscroll="sync_scroll(this);" onkeydown="check_tab(this, event);"></textarea>
+
+                <pre id="highlighting-json" aria-hidden="true">
+                    <code class="language-json" id="highlighting-content-json">        
+                    </code>
+                </pre>
+            </div>
         </div>
 
         <div class="row">
@@ -80,7 +93,19 @@
         <div class="row">
             <div id="tabMenu" class="tab nav">
             </div>
-            <textarea id="textAreaResult" class="tabcontent" rows="15" placeholder="Nothing here" style="display: block;"></textarea>
+
+            <!--
+            <textarea id="textAreaResult" class="tabcontent" rows="15" placeholder="Nothing here" style="display: block;"></textarea> -->
+            
+            <div style="height: 300px;">
+                <textarea placeholder="Insert Dart" id="textAreaResult" spellcheck="false" oninput="updateDart(this.value); sync_scroll_dart(this);" onscroll="sync_scroll_dart(this);" onkeydown="check_tab(this, event);"></textarea>
+
+                <pre id="highlighting-dart" aria-hidden="true">
+                    <code class="language-dart" id="highlighting-content-dart">        
+                    </code>
+                </pre>
+            </div>
+
         </div>
 
     </div>
