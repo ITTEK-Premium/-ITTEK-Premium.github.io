@@ -33,16 +33,27 @@ function openTab(evt) {
     evt.currentTarget.className += " active";
 }
 
-function download() {
+function download(files) {
+
 
     const zip = new JSZip();
 
-    zip.file("Hello.txt", "Hello World\n");
+    const objects = JSON.parse(files);  
+    
+    /*
+    for (let i = 0; i < objects.length; i++) {
+      console.log(`${i} id:${objects[i].filename}, name:${objects[i].code}`)
+    }*/
+
+    
+    for (let i = 0; i < objects.length; i++) {
+      zip.file(objects[i].filename, objects[i].code);
+    }
 
     zip.generateAsync({type:"blob"}).then(function(content) {
         saveAs(content, "model.zip");
     });
-
+    
   }
 
 

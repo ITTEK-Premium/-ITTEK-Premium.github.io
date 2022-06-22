@@ -1,4 +1,4 @@
-from js import document
+import js
 from pyodide import create_proxy
 import json
 
@@ -19,13 +19,13 @@ def get_item_type(item):
 
 
 def add_tab_listener(tabName, event):
-    convertButton = document.getElementById("tab-" + tabName)
+    convertButton = js.document.getElementById("tab-" + tabName)
     cc = create_proxy(event)
     convertButton.addEventListener("click", cc)
 
 
 def get_selected_tab():
-    tablinks = document.getElementsByClassName("tablinks")
+    tablinks = js.document.getElementsByClassName("tablinks")
     selectedTab = "all"
     for tab in tablinks:
         if ("active" in tab.className):
@@ -38,15 +38,15 @@ def get_selected_tab():
 
 
 def select_tab(tabName):
-    tablinks = document.getElementsByClassName("tablinks")
+    tablinks = js.document.getElementsByClassName("tablinks")
     for tab in tablinks:
         if (tab.id == "tab-" + tabName):
-            document.getElementById(tab.id).className += " active"
+            js.document.getElementById(tab.id).className += " active"
 
 
 def get_json_in_element(elementName): # insertJsonArea
 
-    jsonStr = document.getElementById(elementName).value
+    jsonStr = js.document.getElementById(elementName).value
     jsonStr = jsonStr.replace("\n", "")
     jsonStr = jsonStr.replace("\t", "")
     data = json.loads(jsonStr)
@@ -55,16 +55,21 @@ def get_json_in_element(elementName): # insertJsonArea
     
 
 def get_class_name():
-    return document.getElementById("inputClassName").value
+    return js.document.getElementById("inputClassName").value
 
 
 def get_package_name():
-    return document.getElementById("inputPackage").value
+    return js.document.getElementById("inputPackage").value
 
     
 def get_selected_option():
-    return document.getElementById("selectModelType").value
+    return js.document.getElementById("selectModelType").value
 
 
 def set_result(result):
-    document.getElementById('textAreaResult').value = result
+    js.document.getElementById('textAreaResult').value = result
+    js.updateDart(result)
+
+
+def find_all(a_str, sub):
+    return [i for i in range(len(a_str)) if a_str.startswith(sub, i)]

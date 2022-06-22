@@ -52,7 +52,7 @@
             </div>
         </div>
 
-        <div class="row">
+        <div class="row" style="position: absolute; top: 330; left: 0; right: 0; margin-left: auto; margin-right: auto; width: 70%;">
             <div class="col-1">
                 <button id="convertButton" class="btn btn-primary">Generate</button> 
             </div>
@@ -74,7 +74,7 @@
             </div>
 
             <div class="col-2">
-                <button type="button" class="btn btn-success" onclick="download();">
+                <button type="button" id="downloadButton" class="btn btn-success">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-download" viewBox="0 0 16 16">
                         <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"></path>
                         <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"></path>
@@ -91,13 +91,15 @@
         </div>
 
         <div class="row">
-            <div id="tabMenu" class="tab nav">
-            </div>
-
+            
             <!--
             <textarea id="textAreaResult" class="tabcontent" rows="15" placeholder="Nothing here" style="display: block;"></textarea> -->
             
-            <div style="height: 300px;">
+            <div id="tabMenu" class="tab nav">
+            </div>
+
+            <div>
+                
                 <textarea placeholder="Insert Dart" id="textAreaResult" spellcheck="false" oninput="updateDart(this.value); sync_scroll_dart(this);" onscroll="sync_scroll_dart(this);" onkeydown="check_tab(this, event);"></textarea>
 
                 <pre id="highlighting-dart" aria-hidden="true">
@@ -110,12 +112,6 @@
 
     </div>
 
-    <!--
-        
-        - './static/wheels/Js2Py-0.71-py3-none-any.whl'
-        - './static/wheels/pyjsparser-2.7.1-py2-none-any.whl'
-    -->
-
     <py-env>
         - paths:
             - ./py_scripts/convertJsonToModel/convertJsonToModel.py
@@ -127,12 +123,17 @@
     <py-script>
         from js import document
         from pyodide import create_proxy
-        from convertJsonToModel import convert_json
+        from convertJsonToModel import convert_json, download_files
 
         convertButton = document.getElementById('convertButton')
+        downloadButton = document.getElementById('downloadButton')
 
         cc = create_proxy(convert_json)
         convertButton.addEventListener("click", cc)
+
+        cc = create_proxy(download_files)
+        downloadButton.addEventListener("click", cc)
+
     </py-script>
 
  </body>

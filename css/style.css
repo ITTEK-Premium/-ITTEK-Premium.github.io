@@ -19,7 +19,6 @@
 /* Style the tab */
 .tab {
     overflow: hidden;
-    border: 1px solid #ccc;
     background-color: #f1f1f1;
   }
   
@@ -27,7 +26,7 @@
   .tab button {
     background-color: inherit;
     float: left;
-    border: none;
+    border: 1px solid #ccc;
     outline: none;
     cursor: pointer;
     padding: 14px 16px;
@@ -50,7 +49,6 @@
     display: none;
     padding: 6px 12px;
     border: 1px solid #ccc;
-    border-top: none;
   }
 
 
@@ -66,7 +64,7 @@
 }
 #insertJsonArea, #highlighting-json, #highlighting-json * {
   /* Also add text styles to highlighing tokens */
-  font-size: 15pt;
+  font-size: 11pt;
   font-family: arial;
   line-height: 20pt;
   tab-size: 2;
@@ -82,7 +80,6 @@
   margin-right: auto; 
   width: 70%;
   border: 1px solid #ccc;
-  border-top: none;
 }
 
 
@@ -124,11 +121,11 @@
     padding: 10px;
     border: 0;
     width: calc(100% - 32px);
-    height: 150px;
+    height: 300px;
   }
   #textAreaResult, #highlighting-dart, #highlighting-dart * {
     /* Also add text styles to highlighing tokens */
-    font-size: 15pt;
+    font-size: 11pt;
     font-family: arial;
     line-height: 20pt;
     tab-size: 2;
@@ -140,13 +137,22 @@
     position: absolute; 
     left: 0; 
     right: 0; 
+    top: 500;
     margin-left: auto; 
     margin-right: auto; 
     width: 70%;
     border: 1px solid #ccc;
-    border-top: none;
   }
   
+  #tabMenu {
+    position: absolute; 
+    left: 0; 
+    right: 0; 
+    top: 455;
+    margin-left: auto; 
+    margin-right: auto; 
+    width: 70%;
+  }
   
   /* Move the textarea in front of the result */
   
