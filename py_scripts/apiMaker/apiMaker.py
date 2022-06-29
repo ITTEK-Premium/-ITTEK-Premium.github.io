@@ -21,6 +21,7 @@ def download_api(event):
     extension = ".cs"
     models = []
     controllers = []
+    context = None
 
     # for each table create a model
     for table in tables:
