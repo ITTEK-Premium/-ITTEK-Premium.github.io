@@ -49,19 +49,25 @@ function download(files, folderName) {
     
   }
 
-function downloadAPI(models, controllers, folderName) {
+function downloadAPI(models, controllers, context, folderName) {
 
     const zip = new JSZip();
 
+    // Create models
     const modelObjects = JSON.parse(models);  
     for (let i = 0; i < modelObjects.length; i++) {
-      zip.folder("models").file(modelObjects[i].filename, modelObjects[i].code);
+      zip.folder("Models").file(modelObjects[i].filename, modelObjects[i].code);
     }
 
+    // Create controllers
     const controllerObjects = JSON.parse(controllers);  
     for (let i = 0; i < controllerObjects.length; i++) {
-      zip.folder("controllers").file(controllerObjects[i].filename, controllerObjects[i].code);
+      zip.folder("Controllers").file(controllerObjects[i].filename, controllerObjects[i].code);
     }
+
+    // Create context
+    const contextObject = JSON.parse(context);  
+    zip.folder("Context").file(contextObject.filename, contextObject.code);
 
     zip.generateAsync({type:"blob"}).then(function(content) {
         saveAs(content, folderName +".zip");
@@ -74,6 +80,9 @@ function getSelectedDbData() {
   return document.getElementById('output').textContent;
 }
 
+function getApiName() {
+  return document.getElementById('inputClassName').value;
+}
 
 // Code Highlights
 

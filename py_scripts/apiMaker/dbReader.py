@@ -1,5 +1,5 @@
 
-def get_db_json(db_data):
+def get_db_tables(db_data):
 
     # Result data
     tables = []
@@ -42,6 +42,29 @@ def get_db_json(db_data):
 
     return tables
 
+def get_db_name(db_data):
+    
+    # Result data
+    name = "Default"
+
+    # Get all lines in the database script
+    lines = db_data.splitlines()
+
+    for line in lines:
+
+        # Search for database name and select it
+        if ("CREATE DATABASE" in line):
+            result = line.replace("CREATE DATABASE", "")
+            result = result.replace(" ", "")
+            result = result.replace("[", "")
+            result = result.replace("]", "")
+            result = result.replace(" ", "")
+            result = result.replace("\t", "")
+            result = result.replace("\n", "")
+            name = result
+            break
+
+    return name
 
 def get_table_name(line):
     result = line.replace("CREATE TABLE", "")
