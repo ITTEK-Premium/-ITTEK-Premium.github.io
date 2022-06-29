@@ -33,28 +33,46 @@ function openTab(evt) {
     evt.currentTarget.className += " active";
 }
 
-function download(files) {
-
+function download(files, folderName) {
 
     const zip = new JSZip();
 
     const objects = JSON.parse(files);  
-    
-    /*
-    for (let i = 0; i < objects.length; i++) {
-      console.log(`${i} id:${objects[i].filename}, name:${objects[i].code}`)
-    }*/
-
     
     for (let i = 0; i < objects.length; i++) {
       zip.file(objects[i].filename, objects[i].code);
     }
 
     zip.generateAsync({type:"blob"}).then(function(content) {
-        saveAs(content, "model.zip");
+        saveAs(content, folderName +".zip");
     });
     
   }
+
+function downloadAPI(models, controllers, folderName) {
+
+    const zip = new JSZip();
+
+    const modelObjects = JSON.parse(models);  
+    for (let i = 0; i < modelObjects.length; i++) {
+      zip.folder("models").file(modelObjects[i].filename, modelObjects[i].code);
+    }
+
+    const controllerObjects = JSON.parse(controllers);  
+    for (let i = 0; i < controllerObjects.length; i++) {
+      zip.folder("controllers").file(controllerObjects[i].filename, controllerObjects[i].code);
+    }
+
+    zip.generateAsync({type:"blob"}).then(function(content) {
+        saveAs(content, folderName +".zip");
+    });
+    
+  }
+
+
+function getSelectedDbData() {
+  return document.getElementById('output').textContent;
+}
 
 
 // Code Highlights

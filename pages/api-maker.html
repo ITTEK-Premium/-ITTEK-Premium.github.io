@@ -8,18 +8,17 @@
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" ></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.min.js" integrity="sha384-Atwg2Pkwv9vp0ygtn1JAojH0nYbwNJLPhwyoVbhoPwBhjQPR5VtM2+xf0Uwh9KtT" crossorigin="anonymous"></script>
-
+    
+    <script src="../js_scripts/FileSaver.js/dist/FileSaver.js"></script>
+    <script src="http://stuk.github.io/jszip/dist/jszip.min.js"></script>
+    <script type="text/javascript" src="../js_scripts/prism.js"></script>
     <script type="text/javascript" src="../js_scripts/utils.js"></script>
     <script defer src="https://pyscript.net/alpha/pyscript.js"></script>
 
-    <py-env>
-        - paths:
-            - ../../py_scripts/convertJsonToModel/convertJsonToModel.py
-            - ../../py_scripts/convertJsonToModel/convertToFlutter.py
-            - ../../py_scripts/convertJsonToModel/convertToKotlin.py
-            - ../../py_scripts/convertJsonToModel/tabManager.py
-            - ../../py_scripts/convertJsonToModel/utils.py
-    </py-env>
+    <script src="https://unpkg.com/custom-syntax-highlighter@latest/bin/index.js"></script>
+    <script>
+      var highlight = window.csHighlight; //need to initialize the library
+    </script>
 
 </head>
 
@@ -48,46 +47,80 @@
             </div>
 
             <div class="col-2">
-                <input id="inputClassName" class="form-control" placeholder="API Name">
+                <input id="inputClassName" class="form-control" placeholder="API Name" value="Default">
             </div>
 
             <div class="col-2">
                 <select id="selectDbType" class="form-select" onchange="changeModelType()">
-                    <option selected>Select Db Type</option>
-                    <option value="sql-server">SQL Server</option>
+                    <option >Select Db Type</option>
+                    <option selected value="sql-server">SQL Server</option>
                 </select>
             </div>
 
             <div class="col-2">
                 <select id="selectApiType" class="form-select" onchange="changeModelType()">
-                    <option selected>Select API Type</option>
-                    <option value="flutter">.NET Framework</option>
+                    <option >Select API Type</option>
+                    <option selected value="flutter">.NET Framework 6.0</option>
                 </select>
             </div>
             
             <div class="col-4">
                 <div class="form-group">
-                    <input type="file" class="form-control-file" id="exampleFormControlFile1">
+                    <input id="inputfile" value="" type="file" class="form-control-file">
                 </div>
+                <pre id="output" style="display:none;"></pre>
             </div>
 
         </div>
 
         <div class="row" style="margin-top: 5%;">
-            <button type="button" class="btn btn-primary disabled">Download</button>
+            <div class="col-2">
+                <button type="button" id="downloadButton" class="btn btn-success">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-download" viewBox="0 0 16 16">
+                        <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"></path>
+                        <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"></path>
+                    </svg>
+                    Download All
+                </button>
+            </div>
         </div>
 
     </div>
 
+    <script type="text/javascript">
+
+        document.getElementById('inputfile')
+            .addEventListener('change', function() {
+              
+            var fr=new FileReader();
+            fr.onload=function(){
+                document.getElementById('output')
+                        .textContent=fr.result;
+            }
+              
+            fr.readAsText(this.files[0]);
+        })
+    </script>
+    <py-env>
+        - paths:
+            - ../py_scripts/apiMaker/apiMaker.py
+            - ../py_scripts/apiMaker/dbReader.py
+            - ../py_scripts/apiMaker/dotNetFrameWork6.py
+            - ../py_scripts/apiMaker/utils.py
+    </py-env>
     <py-script>
         from js import document
         from pyodide import create_proxy
-        from convertJsonToModel import convert_json
+        from apiMaker import create_api, download_api
 
         convertButton = document.getElementById('convertButton')
+        downloadButton = document.getElementById('downloadButton')
 
-        cc = create_proxy(convert_json)
+        cc = create_proxy(create_api)
         convertButton.addEventListener("click", cc)
+
+        cc = create_proxy(download_api)
+        downloadButton.addEventListener("click", cc)
     </py-script>
 
  </body>

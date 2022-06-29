@@ -1,0 +1,6 @@
+{
+    "varchar":"string",
+    "decimal":"decimal",
+    "int":"int",
+    "bit":"bool"
+}

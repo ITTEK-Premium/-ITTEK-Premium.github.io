@@ -59,4 +59,4 @@ def download_files(event):
         files.append({"filename": str(filename), "code": str(code)})
 
     result = json.dumps(files)
-    js.download(str(result))
+    js.download(str(result), "model")
