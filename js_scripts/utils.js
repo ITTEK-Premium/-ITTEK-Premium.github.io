@@ -49,7 +49,7 @@ function download(files, folderName) {
     
   }
 
-function downloadAPI(models, controllers, context, folderName) {
+function downloadAPI(models, controllers, context, custom_models, custom_controllers, db_data, folderName) {
 
     const zip = new JSZip();
 
@@ -64,10 +64,26 @@ function downloadAPI(models, controllers, context, folderName) {
     for (let i = 0; i < controllerObjects.length; i++) {
       zip.folder("Controllers").file(controllerObjects[i].filename, controllerObjects[i].code);
     }
+    
+    // Create custom models
+    const customModelsObjects = JSON.parse(custom_models);  
+    for (let i = 0; i < customModelsObjects.length; i++) {
+      zip.folder("Models").folder("CustomModels").file(customModelsObjects[i].filename, customModelsObjects[i].code);
+    }
+    
+    // Create custom controllers
+    const customControllersObjects = JSON.parse(custom_controllers);  
+    for (let i = 0; i < customControllersObjects.length; i++) {
+      zip.folder("Controllers").folder("CustomControllers").file(customControllersObjects[i].filename, customControllersObjects[i].code);
+    }
 
     // Create context
     const contextObject = JSON.parse(context);  
     zip.folder("Context").file(contextObject.filename, contextObject.code);
+
+    // Create dbData json file
+    // const dbDataObject = JSON.parse(db_data);  
+    // zip.file(dbDataObject.filename, dbDataObject.code);
 
     zip.generateAsync({type:"blob"}).then(function(content) {
         saveAs(content, folderName +".zip");

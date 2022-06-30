@@ -128,7 +128,7 @@ def get_controller(api_name, db_name, model_name, columns):
     return text
 
 
-def get_context(api_name, db_name, tables):
+def get_context(api_name, db_name, tables, stored_procedures):
     text = ""
 
     text += "using " + api_name + ".Models;\n"
@@ -146,6 +146,11 @@ def get_context(api_name, db_name, tables):
 
     for table in tables:
         text += "\t\tpublic DbSet<"+table["name"]+"> "+table["name"]+" { get; set; }\n"
+    
+    if (len(stored_procedures) > 0):
+        text += "\n\t\t// ---------------------------- Stored Procedures ---------------------------- \n\n"
+        for sp in stored_procedures:
+            text += "\t\tpublic DbSet<"+sp["name"]+"> "+sp["name"]+" { get; set; }\n"
 
     text += "\n"
     text += "\t\t}\n"
@@ -161,22 +166,22 @@ def get_var_type(db_type):
 
     # Find the correct keyword in the dictionary
     try:
-        result = dictionary[db_type]
+        result = dictionary[db_type.upper()]
     except:
-        pass
+        if (result == db_type and "VARCHAR" in db_type):
+            result = "string"
 
     return result
 
 
 # Dictionary that covert variable types in sql server to csharp
 def get_sql_server_to_cs_dictionary():
-    dictionary = {
-        "varchar":"string",
-        "decimal":"decimal",
-        "int":"int",
-        "bit":"bool",
-        "datetime":"DateTime",
-        "date":"DateTime",
-        "time":"TimeSpan"
+    return {
+        "VARCHAR":"string",
+        "DECIMAL":"decimal",
+        "INT":"int",
+        "BIT":"bool",
+        "DATETIME":"DateTime",
+        "DATE":"DateTime",
+        "TIME":"TimeSpan"
         }
-    return dictionary

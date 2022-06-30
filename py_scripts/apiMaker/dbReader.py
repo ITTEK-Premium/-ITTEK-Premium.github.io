@@ -1,5 +1,5 @@
 
-def get_db_tables(db_data):
+def get_tables(db_data):
 
     # Result data
     tables = []
@@ -42,7 +42,37 @@ def get_db_tables(db_data):
 
     return tables
 
-def get_db_name(db_data):
+
+def get_stored_procedures(db_data, tables):
+
+    # Result data
+    stored_procedures = []
+
+    # Get all lines in the database script
+    lines = db_data.splitlines()
+
+    # Read database script
+    current_line = ""
+    for line in lines:
+
+        # Search for stored procedures
+        if ("CREATE PROCEDURE" in line):
+            current_line = line
+        elif ("GO" in line and current_line != ""):
+            # Add Procedure
+            name = get_stored_procedure_name(current_line)
+            columns = get_stored_procedure_columns(tables, current_line)
+            stored_procedures.append({"name":name, "columns":columns})
+            current_line = ""
+        elif ("AS" == line):
+            current_line += "\nAS\n"
+        elif (current_line != ""):
+            current_line += line
+
+    return stored_procedures
+
+
+def get_name(db_data):
     
     # Result data
     name = "Default"
@@ -66,6 +96,7 @@ def get_db_name(db_data):
 
     return name
 
+
 def get_table_name(line):
     result = line.replace("CREATE TABLE", "")
     result = result.replace("dbo", "")
@@ -76,6 +107,116 @@ def get_table_name(line):
     result = result.replace(" ", "")
     result = result.replace("\t", "")
     result = result.replace("\n", "")
+    return result
+
+
+def get_stored_procedure_name(line):
+    start_pos = None
+    end_pos = None
+    for pos,char in enumerate(line):
+        if(char == '['):
+            start_pos = pos
+        if(char == ']'):
+            end_pos = pos
+
+    result = line[start_pos+1: end_pos]
+    return result
+
+
+def get_stored_procedure_columns(tables, line):
+    columns = []
+
+    # nao é só uma line é um conjunto de linhas ate AS
+
+    # All Columns are after ] 
+    # Each column and type are before ,
+ 
+    # --------------------------- This Works only in POTS AND PUTS, / Add and Updates
+
+    # --------------------------- Missing SELECT. NEEDS OTHER METHOD MORE HARD
+
+    line_splited = line.split("]")
+    columns_in_line = line_splited[len(line_splited)-1]
+
+    temp = columns_in_line.split("\nAS\n")
+
+    columns_in_line = temp[0]
+    stored_procedure_code = temp[1]
+
+    columns_in_line = columns_in_line.replace("\n", "")
+    columns_in_line = columns_in_line.replace("\t", "")
+    stored_procedure_code = stored_procedure_code.replace("\n", "")
+    stored_procedure_code = stored_procedure_code.replace("\t", "")
+
+    raw_columns = columns_in_line.split(",")
+
+    # SELECT get the columns in the SELECT line
+    if ("SELECT" in stored_procedure_code):
+
+        # ex: dv.id as drawing_version_id, c.id as client_id, d.drawing_number, dv.version, dv.color_quantity, sv.description as service_description, dv.width, dv.height, d.observation, d.image
+        select_columns_in_line = stored_procedure_code.split("SELECT")[1].split("FROM")[0]
+        select_raw_columns = select_columns_in_line.split(",")
+
+        for raw_column in select_raw_columns:
+
+            delim = None
+            if (" as " in raw_column):
+                delim = " as "
+            elif (" AS " in raw_column):
+                delim = " AS "
+
+            if (delim != None):
+                
+                # Get column original name in tables
+                col_original_name = raw_column.split(delim)[0] # check for . and split
+                if ("." in col_original_name):
+                    col_original_name = col_original_name.split(".")[1]
+                col_original_name = col_original_name.replace(" ", "")
+
+                # Get column new name choosed by the developer
+                col_new_name = raw_column.split(delim)[1]
+                col_new_name = col_new_name.replace(" ", "")
+
+                # MISSING TYPE FOR NOW
+                col_type = get_type_in_stored_procedure(tables, col_original_name)
+                type_lenght = None
+
+                columns.append({"name":col_new_name,"type":col_type,"length":type_lenght})
+            else:
+                # Get column name
+                col_name = raw_column
+                if ("." in col_name):
+                    col_name = col_name.split(".")[1]
+                col_name = col_name.replace(" ", "")
+                
+                # MISSING TYPE FOR NOW
+                col_type = get_type_in_stored_procedure(tables, col_name)
+                type_lenght = None
+
+                columns.append({"name":col_name,"type":col_type,"length":type_lenght})
+
+    # INSERT AND UPDATE get the columns in the procedure header
+    else:
+        for raw_column in raw_columns:
+            col_name = raw_column.split("@")[1].split(" ")[0]
+            col_type = raw_column.split("@")[1].split(" ")[1]
+            type_lenght = None
+            columns.append({"name":col_name,"type":col_type,"length":type_lenght})
+
+    return columns
+
+
+def get_type_in_stored_procedure(tables, column_name):
+    result = "MISSING"
+
+    # Find in all tables for a name equal to the column name and get is type
+    for table in tables:
+        for column in table["columns"]:
+            if (column["name"] == column_name):
+                return column["type"]
+
+    result = find_type_in_keyword_dictionary_sql_server(column_name)
+
     return result
 
 
@@ -108,3 +249,19 @@ def get_column_type(line):
 
 def get_type_lenght(line):
     return None
+
+
+def get_type_keyword_dictionary_sql_server():
+    return {
+        "quantity":"int",
+        "count":"int",
+        "id":"int"
+        }
+
+def find_type_in_keyword_dictionary_sql_server(keyword):
+    dictionary = get_type_keyword_dictionary_sql_server()
+    for word in dictionary:
+        if word in keyword:
+            return dictionary[word]
+    return "MISSING"
+    
