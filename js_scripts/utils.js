@@ -100,6 +100,10 @@ function getApiName() {
   return document.getElementById('inputClassName').value;
 }
 
+function getApiType() {
+  return document.getElementById('selectApiType').value;
+}
+
 // Code Highlights
 
 function updateJson(text) {

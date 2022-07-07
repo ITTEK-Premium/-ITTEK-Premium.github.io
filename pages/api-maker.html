@@ -67,14 +67,15 @@
             <div class="col-2">
                 <select id="selectApiType" class="form-select" onchange="changeModelType()">
                     <option >Select API Type</option>
-                    <option selected value="flutter">.NET Framework 6.0</option>
+                    <option value="dot-net-framework-5">.NET Framework 5.0</option>
+                    <option selected value="dot-net-framework-6">.NET Framework 6.0</option>
                 </select>
             </div>
 
             <div class="col-2">
                 <select id="selectApiType" class="form-select" onchange="changeModelType()">
                     <option >Select Arquiteture</option>
-                    <option selected value="flutter">MVC</option>
+                    <option selected value="mvc">MVC</option>
                 </select>
             </div>
             
@@ -108,6 +109,7 @@
         - paths:
             - ../py_scripts/apiMaker/apiMaker.py
             - ../py_scripts/apiMaker/dbReader.py
+            - ../py_scripts/apiMaker/dotNetFrameWork5.py
             - ../py_scripts/apiMaker/dotNetFrameWork6.py
             - ../py_scripts/apiMaker/utils.py
     </py-env>
