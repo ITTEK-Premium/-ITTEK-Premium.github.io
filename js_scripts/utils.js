@@ -92,6 +92,62 @@ function downloadAPI(models, controllers, context, custom_models, custom_control
   }
 
 
+  function downloadAPI6(models, controllers, context, custom_models, custom_controllers, launch_settings, app_settings, app_settings_dev, program, project_file, folderName) {
+
+    const zip = new JSZip();
+
+    // Create models
+    const modelObjects = JSON.parse(models);  
+    for (let i = 0; i < modelObjects.length; i++) {
+      zip.folder("Models").file(modelObjects[i].filename, modelObjects[i].code);
+    }
+
+    // Create controllers
+    const controllerObjects = JSON.parse(controllers);  
+    for (let i = 0; i < controllerObjects.length; i++) {
+      zip.folder("Controllers").file(controllerObjects[i].filename, controllerObjects[i].code);
+    }
+    
+    // Create custom models
+    const customModelsObjects = JSON.parse(custom_models);  
+    for (let i = 0; i < customModelsObjects.length; i++) {
+      zip.folder("Models").folder("CustomModels").file(customModelsObjects[i].filename, customModelsObjects[i].code);
+    }
+    
+    // Create custom controllers
+    const customControllersObjects = JSON.parse(custom_controllers);  
+    for (let i = 0; i < customControllersObjects.length; i++) {
+      zip.folder("Controllers").folder("CustomControllers").file(customControllersObjects[i].filename, customControllersObjects[i].code);
+    }
+
+    // Create context
+    const contextObject = JSON.parse(context);  
+    zip.folder("Context").file(contextObject.filename, contextObject.code);
+
+    // Create Properties
+    const launchObject = JSON.parse(launch_settings);  
+    zip.folder("Properties").file(launchObject.filename, launchObject.code);
+    
+    // Create App settings
+    const app_settings_Object = JSON.parse(app_settings);  
+    zip.file(app_settings_Object.filename, app_settings_Object.code);
+    const app_settings_dev_Object = JSON.parse(app_settings_dev);  
+    zip.file(app_settings_dev_Object.filename, app_settings_dev_Object.code);
+
+    // Create Program & project
+    const program_Object = JSON.parse(program);  
+    zip.file(program_Object.filename, program_Object.code); 
+    
+    const project_file_Object = JSON.parse(project_file);  
+    zip.file(project_file_Object.filename, project_file_Object.code);
+
+    zip.generateAsync({type:"blob"}).then(function(content) {
+        saveAs(content, folderName +".zip");
+    });
+    
+  }
+
+
 function getSelectedDbData() {
   return document.getElementById('output').textContent;
 }

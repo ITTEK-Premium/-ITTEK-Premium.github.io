@@ -15,6 +15,11 @@
 .active .nav-link {
     font-weight: bold;
 }
+
+.api-maker-div {
+  padding-top: 2%;
+  align-content: center;
+}
   
 /* Style the tab */
 .tab {

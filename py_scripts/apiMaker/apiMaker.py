@@ -31,7 +31,25 @@ def download_api(event):
     custom_models_json = json.dumps(custom_models)
     custom_controllers_json = json.dumps(custom_controllers)
     db_data = json.dumps({"filename": "storedProcedures.json", "code": str(stored_procedures)})
-    js.downloadAPI(str(models_json), str(controllers_json), str(context_json), str(custom_models_json), str(custom_controllers_json), str(db_data), api_name)
+    
+    
+    if (api_type == "dot-net-framework-6"):
+        launch_settings = get_launch_settings_code(api_name)
+        app_settings = get_app_settings_code(db_name)
+        app_settings_dev = get_app_settings_dev_code()
+        program = get_program_code(api_name, db_name)
+        project_file = get_project_file()
+        launch_settings_json = json.dumps({"filename": "launchSettings.json", "code": str(launch_settings)})
+        app_settings_json = json.dumps({"filename": "appsettings.json", "code": str(app_settings)})
+        app_settings_dev_json = json.dumps({"filename": "appsettings.Development.json", "code": str(app_settings_dev)})
+        program_json = json.dumps({"filename": "Program.cs", "code": str(program)})
+        project_file_json = json.dumps({"filename": api_name+".csproj", "code": str(project_file)})
+
+        js.downloadAPI6(str(models_json), str(controllers_json), str(context_json), str(custom_models_json), str(custom_controllers_json), str(launch_settings_json), str(app_settings_json), str(app_settings_dev_json), str(program_json), str(project_file_json), api_name)
+    
+    else:
+        
+        js.downloadAPI(str(models_json), str(controllers_json), str(context_json), str(custom_models_json), str(custom_controllers_json), str(db_data), api_name)
     
 
 # Create all Models in each table
@@ -120,7 +138,21 @@ def get_context_code(api_name, api_type, db_name, tables, stored_procedures):
         "dot-net-framework-5": dotNetFrameWork5.get_context(api_name, db_name, tables, stored_procedures),
         "dot-net-framework-6": dotNetFrameWork6.get_context(api_name, db_name, tables, stored_procedures)
     }
-
-    print("a versao é: " + str(api_type))
-
     return model[api_type]
+
+
+# Get other files for version 6.0.6 of dotnet
+def get_launch_settings_code(api_name):
+    return dotNetFrameWork6.get_launch_settings(api_name)
+
+def get_app_settings_code(db_name):
+    return dotNetFrameWork6.get_app_settings(db_name)
+
+def get_app_settings_dev_code():
+    return dotNetFrameWork6.get_app_settings_dev()
+
+def get_program_code(api_name, db_name):
+    return dotNetFrameWork6.get_program(api_name, db_name)
+
+def get_project_file():
+    return dotNetFrameWork6.get_project_file()
