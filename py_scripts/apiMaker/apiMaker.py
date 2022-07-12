@@ -128,7 +128,7 @@ def get_custom_models(api_name, api_type, stored_procedures):
     custom_models = []
 
     for sp in stored_procedures:
-        code = get_model_code(api_name, api_type, sp["name"], sp["columns"])
+        code = get_custom_model_code(api_name, api_type, sp["name"], sp["columns"])
         filename = sp["name"] + EXTENSION
         file = {"filename": filename, "code": str(code)}
         custom_models.append(file)
@@ -146,7 +146,7 @@ def get_custom_controllers(api_name, api_type, db_name, stored_procedures):
     custom_controllers = []
 
     for sp in stored_procedures:
-        code = get_controller_code(api_name, api_type, db_name, sp["name"], sp["columns"])
+        code = get_custom_controller_code(api_name, api_type, db_name, sp["name"], sp["columns"], sp["headers"])
         filename = sp["name"] + "Controller" + EXTENSION
         file = {"filename": filename, "code": str(code)}
         custom_controllers.append(file)
@@ -186,7 +186,7 @@ def get_context(api_name, api_type, db_name, tables, stored_procedures):
 def get_model_code(api_name, api_type, model_name, columns):
     model = {
         "dot-net-framework-5": dotNetFrameWork5.get_model(api_name, model_name, columns),
-        "dot-net-framework-6": dotNetFrameWork6.get_model(api_name, model_name, columns)
+        "dot-net-framework-6": dotNetFrameWork6.get_model(api_name, model_name, columns, False)
     }
     return model[api_type]
 
@@ -202,6 +202,35 @@ def get_controller_code(api_name, api_type, db_name, model_name, columns):
     model = {
         "dot-net-framework-5": dotNetFrameWork5.get_controller(api_name, db_name, model_name, columns),
         "dot-net-framework-6": dotNetFrameWork6.get_controller(api_name, db_name, model_name, columns),
+    }
+    return model[api_type]
+
+
+### Get custom model code based on the selected api type ### TODO TODO TODO TODO
+## Parameters
+# 1. @api_name = API name
+# 2. @api_type = API type
+# 3. @model_name = Database name
+# 4. @columns = All Columns in the (api_name) table
+def get_custom_model_code(api_name, api_type, model_name, columns):
+    model = {
+        "dot-net-framework-5": dotNetFrameWork5.get_model(api_name, model_name, columns),
+        "dot-net-framework-6": dotNetFrameWork6.get_model(api_name, model_name, columns, True)
+    }
+    return model[api_type]
+
+
+### Get custom controller code based on the selected api type ### TODO TODO TODO TODO
+## Parameters
+# 1. @api_name = API name
+# 2. @api_type = API type
+# 3. @db_name = Database name
+# 4. @model_name = Database name
+# 5. @columns = All Columns in the (api_name) table
+def get_custom_controller_code(api_name, api_type, db_name, model_name, columns, headers):
+    model = {
+        "dot-net-framework-5": dotNetFrameWork5.get_controller(api_name, db_name, model_name, columns),
+        "dot-net-framework-6": dotNetFrameWork6.get_stored_procedure_controller(api_name, db_name, model_name, columns, headers),
     }
     return model[api_type]
 

@@ -85,7 +85,14 @@ def get_stored_procedures(db_data, tables):
             # Add Procedure
             name = get_stored_procedure_name(current_line)
             columns = get_stored_procedure_columns(tables, current_line)
-            stored_procedures.append({"name":name, "columns":columns})
+
+            # Get headers from Select
+            if ("SELECT" in current_line):
+                headers = get_stored_procedure_headers(current_line)
+                stored_procedures.append({"name":name, "columns":columns, "headers": headers})
+            else:
+                stored_procedures.append({"name":name, "columns":columns, "headers": None})
+
             current_line = ""
         elif ("AS" == line):
             current_line += "\nAS\n"
@@ -162,6 +169,33 @@ def get_stored_procedure_name(line):
     return result
 
 
+### Get stored procedure select headers used to call the function in the API ###
+## Parameters
+# 2. @line = Database creation script current line text
+def get_stored_procedure_headers(line):
+    try:
+        headers = []
+
+        line_splited = line.split("]")
+        columns_in_line = line_splited[len(line_splited)-1]
+
+        temp = columns_in_line.split("\nAS\n")
+
+        headers_in_line = temp[0]
+        raw_headers = headers_in_line.split(",")
+
+        for raw_header in raw_headers:
+            col_name = raw_header.split("@")[1].split(" ")[0]
+            col_type = raw_header.split("@")[1].split(" ")[1]
+            type_lenght = None
+            headers.append({"name":col_name,"type":col_type,"length":type_lenght})
+
+        return headers
+    except:
+        return None
+    
+
+
 ### Get stored procedure columns ###
 ## Parameters
 # 1. @tables = All tables in the database
@@ -173,10 +207,6 @@ def get_stored_procedure_columns(tables, line):
 
     # All Columns are after ] 
     # Each column and type are before ,
- 
-    # --------------------------- This Works only in POTS AND PUTS, / Add and Updates
-
-    # --------------------------- Missing SELECT. NEEDS OTHER METHOD MORE HARD
 
     line_splited = line.split("]")
     columns_in_line = line_splited[len(line_splited)-1]
@@ -197,46 +227,54 @@ def get_stored_procedure_columns(tables, line):
     if ("SELECT" in stored_procedure_code):
 
         # ex: dv.id as drawing_version_id, c.id as client_id, d.drawing_number, dv.version, dv.color_quantity, sv.description as service_description, dv.width, dv.height, d.observation, d.image
-        select_columns_in_line = stored_procedure_code.split("SELECT")[1].split("FROM")[0]
-        select_raw_columns = select_columns_in_line.split(",")
+        all_select_store_procedures = stored_procedure_code.split("SELECT")
 
-        for raw_column in select_raw_columns:
+        # Skip always the 1 element in the list because is the create procedure line
+        for index, select_store_procedures in enumerate(all_select_store_procedures):
 
-            delim = None
-            if (" as " in raw_column):
-                delim = " as "
-            elif (" AS " in raw_column):
-                delim = " AS "
+            if (index == 0):
+                continue
 
-            if (delim != None):
-                
-                # Get column original name in tables
-                col_original_name = raw_column.split(delim)[0] # check for . and split
-                if ("." in col_original_name):
-                    col_original_name = col_original_name.split(".")[1]
-                col_original_name = col_original_name.replace(" ", "")
+            select_columns_in_line = select_store_procedures.split("FROM")[0]
+            select_raw_columns = select_columns_in_line.split(",")
 
-                # Get column new name choosed by the developer
-                col_new_name = raw_column.split(delim)[1]
-                col_new_name = col_new_name.replace(" ", "")
+            for raw_column in select_raw_columns:
 
-                # MISSING TYPE FOR NOW
-                col_type = get_type_in_stored_procedure(tables, col_original_name)
-                type_lenght = None
+                delim = None
+                if (" as " in raw_column):
+                    delim = " as "
+                elif (" AS " in raw_column):
+                    delim = " AS "
 
-                columns.append({"name":col_new_name,"type":col_type,"length":type_lenght})
-            else:
-                # Get column name
-                col_name = raw_column
-                if ("." in col_name):
-                    col_name = col_name.split(".")[1]
-                col_name = col_name.replace(" ", "")
-                
-                # MISSING TYPE FOR NOW
-                col_type = get_type_in_stored_procedure(tables, col_name)
-                type_lenght = None
+                if (delim != None):
+                    
+                    # Get column original name in tables
+                    col_original_name = raw_column.split(delim)[0] # check for . and split
+                    if ("." in col_original_name):
+                        col_original_name = col_original_name.split(".")[1]
+                    col_original_name = col_original_name.replace(" ", "")
 
-                columns.append({"name":col_name,"type":col_type,"length":type_lenght})
+                    # Get column new name choosed by the developer
+                    col_new_name = raw_column.split(delim)[1]
+                    col_new_name = col_new_name.replace(" ", "")
+
+                    # MISSING TYPE FOR NOW
+                    col_type = get_type_in_stored_procedure(tables, col_original_name)
+                    type_lenght = None
+
+                    columns.append({"name":col_new_name,"type":col_type,"length":type_lenght})
+                else:
+                    # Get column name
+                    col_name = raw_column
+                    if ("." in col_name):
+                        col_name = col_name.split(".")[1]
+                    col_name = col_name.replace(" ", "")
+                    
+                    # MISSING TYPE FOR NOW
+                    col_type = get_type_in_stored_procedure(tables, col_name)
+                    type_lenght = None
+
+                    columns.append({"name":col_name,"type":col_type,"length":type_lenght})
 
     # INSERT AND UPDATE get the columns in the procedure header
     else:

@@ -21,7 +21,7 @@
 # 1. @api_name = API name
 # 2. @model_name = Model name
 # 3. @columns = All columns in the (api_name) table
-def get_model(api_name, model_name, columns):
+def get_model(api_name, model_name, columns, isStoredProcedure):
 
     # Declare Variables
     text = ""
@@ -31,7 +31,10 @@ def get_model(api_name, model_name, columns):
     text += "using System.ComponentModel.DataAnnotations;\n"
     text += "using Newtonsoft.Json;\n"
     text += "\n"
-    text += "namespace " + api_name + ".Models\n"
+    if (isStoredProcedure):
+        text += "namespace " + api_name + ".Models.StoredProcedures\n"
+    else:
+        text += "namespace " + api_name + ".Models\n"
     text += "{\n"
     
     # Write Class
@@ -147,11 +150,12 @@ def get_controller(api_name, db_name, model_name, columns):
 # 4. @columns = All Columns in the (api_name) table
 # 5. @stored_procedures = All Stored Procedures in the Database Script
 ## TODO 
-# 1. Read Properly
-# 2. Analyse witch method use
-# 3. Build Individual Controller
-# 4. Build Multi Model Controller
-def get_stored_procedure_controller(api_name, db_name, model_name, columns, stored_procedures):
+# 1. Read Properly -DONE
+# 2. Analyse witch method use -DONE
+# 3. Build Individual Controller -DONE
+# 4. Get with parameters -DONE
+# 5. Build Multi Model Controller
+def get_stored_procedure_controller(api_name, db_name, model_name, columns, headers):
     text = ""
 
     # Get Store Procedure name
@@ -167,9 +171,21 @@ def get_stored_procedure_controller(api_name, db_name, model_name, columns, stor
     text += "using " + api_name + ".Data;\n"
     text += "using " + api_name + ".Models;\n"
     text += "\n"
-    text += "namespace " + api_name + ".Controllers\n"
+    text += "namespace " + api_name + ".Controllers.StoredProcedures\n"
     text += "{\n"
-    text += "\t[Route(\"api/[controller]\")]\n"
+
+    # Set Default Route
+    if (headers == None):
+        text += "\t[Route(\"api/[controller]\")]\n"
+    # Set Route with all headers
+    else:
+        text += "\t[Route(\"api/[controller]/"
+        for index, header in enumerate(headers):
+            text += "{"+header["name"]+"}"
+            if (index < len(headers)-1):
+                text += "/"
+        text += "\")]\n"
+
     text += "\t[ApiController]\n"
     text += "\tpublic class " + model_name + "Controller : ControllerBase\n"
     text += "\t{\n"
@@ -181,7 +197,16 @@ def get_stored_procedure_controller(api_name, db_name, model_name, columns, stor
     text += "\t\t}\n"
     text += "\n"
 
-    # Find for other stored procedures that can be here
+    # Get Stored Procedure Type (SELECT, INSERT, UPDATE, DELETE) # TODO DELETE
+    method_code = ""
+    if ("get" in model_name.lower()):
+        method_code = get_get_stored_procedure_method(model_name, headers)
+    elif ("add" in model_name.lower()):
+        method_code = get_post_stored_procedure_method(model_name, columns)
+    elif ("update" in model_name.lower()):
+        method_code = get_put_stored_procedure_method(model_name, columns)
+
+    text += method_code
 
     # End
     text += "\t}\n"
@@ -368,6 +393,95 @@ def get_delete_method(model_name):
     return text
 
 
+### Dot Net FrameWork 6.0.6 Get Store Procedure Method generated for default controller ###
+## Parameters
+# 1. @model_name = Model name
+def get_get_stored_procedure_method(model_name, headers):
+    text = ""
+    text += "\t\t// GET: api/" + model_name + "\n"
+    text += "\t\t[HttpGet]\n"
+    text += "\t\tpublic async Task<ActionResult<IEnumerable<" + model_name + ">>> Get("
+
+    # Set all parameters
+    if (headers != None):
+        for index, header in enumerate(headers):
+            type_converted = get_var_type(header["type"])
+            text += type_converted +" "+header["name"]
+            if (index < len(headers)-1):
+                text += ", "
+
+    text += ")\n"
+    text += "\t\t{\n"
+    text += "\t\t\tif (_context." + model_name + " == null)\n"
+    text += "\t\t\t{\n"
+    text += "\t\t\t\treturn NotFound();\n"
+    text += "\t\t\t}\n"
+    text += "\t\t\tvar query = await _context." + model_name + ".FromSqlInterpolated($\"EXEC "+model_name
+
+    #example: text += "\t\t\tFormattableString cmd = $\"EXEC "+model_name+" @UserId = {"+var_name+".user_id}, @StopTypeId = {"+var_name+".stop_type_id}\";\n"
+    if (headers != None):
+        for index, header in enumerate(headers):
+            text += " @"+header["name"]+" = {"+header["name"]+"}"
+            if index < len(headers)-1:
+                text += ","
+
+    text += ";\").ToListAsync();\n"
+
+    text += "\t\t\treturn query;\n"
+    text += "\t\t}\n"
+    text += "\n"
+    return text
+
+
+### Dot Net FrameWork 6.0.6 Post Store Procedure Method generated for default controller ###
+## Parameters
+# 1. @model_name = Model name
+def get_post_stored_procedure_method(model_name, columns):
+    text = ""
+    var_name = "_"+model_name.lower()
+    text += "\t\t[HttpPost]\n"
+    text += "\t\tpublic async Task<ActionResult<Stop>> Post("+model_name+" "+var_name+")\n"
+    text += "\t\t{\n"
+    text += "\t\t\tFormattableString cmd = $\"EXEC "+model_name
+
+    #example: text += "\t\t\tFormattableString cmd = $\"EXEC "+model_name+" @UserId = {"+var_name+".user_id}, @StopTypeId = {"+var_name+".stop_type_id}\";\n"
+    for index, column in enumerate(columns):
+        text += " @"+column["name"]+" = {"+var_name+"."+column["name"]+"}"
+        if index < len(columns)-1:
+            text += ","
+    text += "\";\n"
+
+    text += "\t\t\t_context.Database.ExecuteSqlInterpolated(cmd);\n"
+    text += "\n"
+    text += "\t\t\treturn NoContent();\n"
+    text += "\t\t}\n"
+    return text
+
+
+### Dot Net FrameWork 6.0.6 Put Store Procedure Method generated for default controller ###
+## Parameters
+# 1. @model_name = Model name
+def get_put_stored_procedure_method(model_name, columns):
+    text = ""
+    var_name = "_"+model_name.lower()
+    text += "\t\t[HttpPut]\n"
+    text += "\t\tpublic async Task<ActionResult<Stop>> Put("+model_name+" "+var_name+")\n"
+    text += "\t\t{\n"
+    text += "\t\t\tFormattableString cmd = $\"EXEC "+model_name
+
+    #example: text += "\t\t\tFormattableString cmd = $\"EXEC "+model_name+" @UserId = {"+var_name+".user_id}, @StopTypeId = {"+var_name+".stop_type_id}\";\n"
+    for index, column in enumerate(columns):
+        text += " @"+column["name"]+" = {"+var_name+"."+column["name"]+"}"
+        if index < len(columns)-1:
+            text += ","
+    text += "\";\n"
+
+    text += "\t\t\t_context.Database.ExecuteSqlInterpolated(cmd);\n"
+    text += "\n"
+    text += "\t\t\treturn NoContent();\n"
+    text += "\t\t}\n"
+    return text
+
 
 ####################################################
 ## 3. Generate Other Files
@@ -531,6 +645,7 @@ def get_project_file():
 ####################################################
 ## 4. Utils
 ####################################################         
+
 
 
 ### Convert from a selected Db Type a Variable Type to Csharp Variable Type ###

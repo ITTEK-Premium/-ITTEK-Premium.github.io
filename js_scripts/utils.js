@@ -111,13 +111,13 @@ function downloadAPI(models, controllers, context, custom_models, custom_control
     // Create custom models
     const customModelsObjects = JSON.parse(custom_models);  
     for (let i = 0; i < customModelsObjects.length; i++) {
-      zip.folder("Models").folder("CustomModels").file(customModelsObjects[i].filename, customModelsObjects[i].code);
+      zip.folder("Models").folder("StoredProcedures").file(customModelsObjects[i].filename, customModelsObjects[i].code);
     }
     
     // Create custom controllers
     const customControllersObjects = JSON.parse(custom_controllers);  
     for (let i = 0; i < customControllersObjects.length; i++) {
-      zip.folder("Controllers").folder("CustomControllers").file(customControllersObjects[i].filename, customControllersObjects[i].code);
+      zip.folder("Controllers").folder("StoredProcedures").file(customControllersObjects[i].filename, customControllersObjects[i].code);
     }
 
     // Create context
