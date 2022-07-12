@@ -1,4 +1,23 @@
+####################################################
+## SQL Server Documentation -> https://docs.microsoft.com/en-us/sql/sql-server/?view=sql-server-ver16
 
+# Abstract: Library with all functions to read any type of Database creation script. Currently available only SQL Server.
+# Author: André Cerqueira
+# Start Date: 25/06/2022
+# Last Update Date: 12/07/2022
+# Current Version: 2.0
+
+####################################################
+
+
+####################################################
+## 1. Get Database primary data
+####################################################  
+
+
+### Get all tables data in Database ###
+## Parameters
+# 1. @db_data = Database creation script code text
 def get_tables(db_data):
 
     # Result data
@@ -43,6 +62,10 @@ def get_tables(db_data):
     return tables
 
 
+### Get all stored procedures data in Database ###
+## Parameters
+# 1. @db_data = Database creation script code text
+# 2. @tables = All tables in the database
 def get_stored_procedures(db_data, tables):
 
     # Result data
@@ -72,6 +95,16 @@ def get_stored_procedures(db_data, tables):
     return stored_procedures
 
 
+
+####################################################
+## 2. Get Database secondary data
+####################################################  
+
+
+
+### Get Database name ###
+## Parameters
+# 1. @db_data = Database creation script code text
 def get_name(db_data):
     
     # Result data
@@ -97,6 +130,9 @@ def get_name(db_data):
     return name
 
 
+### Get table name ###
+## Parameters
+# 1. @line = Database creation script current line text
 def get_table_name(line):
     result = line.replace("CREATE TABLE", "")
     result = result.replace("dbo", "")
@@ -110,6 +146,9 @@ def get_table_name(line):
     return result
 
 
+### Get stored procedure name ###
+## Parameters
+# 1. @line = Database creation script current line text
 def get_stored_procedure_name(line):
     start_pos = None
     end_pos = None
@@ -123,6 +162,10 @@ def get_stored_procedure_name(line):
     return result
 
 
+### Get stored procedure columns ###
+## Parameters
+# 1. @tables = All tables in the database
+# 2. @line = Database creation script current line text
 def get_stored_procedure_columns(tables, line):
     columns = []
 
@@ -206,6 +249,10 @@ def get_stored_procedure_columns(tables, line):
     return columns
 
 
+### Get variable type for a variable in a stored procedure ###
+## Parameters
+# 1. @tables = All tables in the database
+# 2. @column_name = Variable / Column name
 def get_type_in_stored_procedure(tables, column_name):
     result = "MISSING"
 
@@ -220,6 +267,9 @@ def get_type_in_stored_procedure(tables, column_name):
     return result
 
 
+### Get variable name / column name ###
+## Parameters
+# 1. @line = Database creation script current line text
 def get_column_name(line):
 
     start_pos = None
@@ -234,6 +284,9 @@ def get_column_name(line):
     return result
 
 
+### Get variable type / column type ###
+## Parameters
+# 1. @line = Database creation script current line text
 def get_column_type(line):
     start_pos = None
     end_pos = None
@@ -247,10 +300,24 @@ def get_column_type(line):
     return result
 
 
+### Get variable lenght / column lenght ###
+## Parameters
+# 1. @line = Database creation script current line text
+# TODO [CURRENTLY NOT USED]
 def get_type_lenght(line):
     return None
 
 
+
+####################################################
+## 3. Utils
+####################################################  
+
+
+
+### Get the variable type for a stored procedure that got none based on some keywords ###
+## Parameters
+# 1. @line = Database creation script current line text
 def get_type_keyword_dictionary_sql_server():
     return {
         "quantity":"int",
@@ -258,6 +325,10 @@ def get_type_keyword_dictionary_sql_server():
         "id":"int"
         }
 
+
+### Get the variable type for a stored procedure by looking for the name in the dictionary ###
+## Parameters
+# 1. @keyword = variable name / column name
 def find_type_in_keyword_dictionary_sql_server(keyword):
     dictionary = get_type_keyword_dictionary_sql_server()
     for word in dictionary:

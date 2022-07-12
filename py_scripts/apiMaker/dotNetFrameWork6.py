@@ -1,15 +1,41 @@
+####################################################
+## Py-Script Documentation -> https://github.com/pyscript/pyscript/blob/main/docs/tutorials/getting-started.md
+## .NET FrameWork 6.0 Documentation -> https://docs.microsoft.com/en-us/dotnet/core/whats-new/dotnet-6
 
-# Model of dot Net FrameWork 6.0.6
+# Abstract: Library with all functions to build an API with .NET FrameWork 6.0.6
+# Author: André Cerqueira
+# Start Date: 01/07/2022
+# Last Update Date: 12/07/2022
+# Current Version: 1.1
+
+####################################################
+
+
+####################################################
+## 1. Generate Script Code Functions
+####################################################  
+
+
+### Dot Net FrameWork 6.0.6 Model generated from a table from a database script ###
+## Parameters
+# 1. @api_name = API name
+# 2. @model_name = Model name
+# 3. @columns = All columns in the (api_name) table
 def get_model(api_name, model_name, columns):
+
+    # Declare Variables
     text = ""
     isKeyless = False
 
+    # Write Imports
     text += "using System.ComponentModel.DataAnnotations;\n"
     text += "using Newtonsoft.Json;\n"
     text += "\n"
     text += "namespace " + api_name + ".Models\n"
     text += "{\n"
     
+    # Write Class
+
     # Check need for Keyless, basically check if model has Get, Add or Update in name
     isKeyless = ("get" in model_name.lower() or "add" in model_name.lower() or "update" in model_name.lower())
     if (isKeyless):
@@ -20,6 +46,7 @@ def get_model(api_name, model_name, columns):
     if (not isKeyless):
         text += "\t\t[Key]\n"
 
+    # Write Every Variable and Variable Type
     for column in columns:
 
         var_type = get_var_type(column["type"])
@@ -42,17 +69,26 @@ def get_model(api_name, model_name, columns):
         text += "\t\t[JsonProperty(PropertyName = \"" + name_without_first + "\")]\n"
         text += "\t\tpublic "+var_type+" "+column["name"]+" { get; set; }\n"
 
+    # Close Code
     text += "\t}\n"
     text += "}"
 
     return text
 
 
-# Controller of dot Net FrameWork 6.0.6
+### Dot Net FrameWork 6.0.6 Controller generated from a table from a database script ###
+## Parameters
+# 1. @api_name = API name
+# 2. @db_name = DataBase name
+# 3. @model_name = Model name
+# 4. @columns = All Columns in the (api_name) table
 def get_controller(api_name, db_name, model_name, columns):
+
+    # Declare Variables
     text = ""
     first_column_name = columns[0]["name"]
 
+    # Write Imports
     text += "using System;\n"
     text += "using System.Collections.Generic;\n"
     text += "using System.Linq;\n"
@@ -63,6 +99,8 @@ def get_controller(api_name, db_name, model_name, columns):
     text += "using " + api_name + ".Data;\n"
     text += "using " + api_name + ".Models;\n"
     text += "\n"
+    
+    # Write Namespace, Class Start and Constructors
     text += "namespace " + api_name + ".Controllers\n"
     text += "{\n"
     text += "\t[Route(\"api/[controller]\")]\n"
@@ -77,16 +115,14 @@ def get_controller(api_name, db_name, model_name, columns):
     text += "\t\t}\n"
     text += "\n"
 
+    # Write Methods
     text += get_get_all_method(model_name)
-
     text += get_get_by_id_method(model_name)
-
     text += get_put_method(model_name)
-
     text += get_post_method(model_name, db_name, first_column_name)
-
     text += get_delete_method(model_name)
 
+    # Write Class End and Close Code
     text += "\t\t\t_context." + model_name + ".Remove(_" + model_name.lower() + ");\n"
     text += "\t\t\tawait _context.SaveChangesAsync();\n"
     text += "\n"
@@ -103,7 +139,18 @@ def get_controller(api_name, db_name, model_name, columns):
     return text
 
 
-# TODO AINDA POR FAZER
+### Controller of dot Net FrameWork 6.0.6 ###
+## Parameters
+# 1. @api_name = API name
+# 2. @db_name = DataBase name
+# 3. @model_name = Model name
+# 4. @columns = All Columns in the (api_name) table
+# 5. @stored_procedures = All Stored Procedures in the Database Script
+## TODO 
+# 1. Read Properly
+# 2. Analyse witch method use
+# 3. Build Individual Controller
+# 4. Build Multi Model Controller
 def get_stored_procedure_controller(api_name, db_name, model_name, columns, stored_procedures):
     text = ""
 
@@ -142,7 +189,61 @@ def get_stored_procedure_controller(api_name, db_name, model_name, columns, stor
     return text
 
 
-# Get Method used in the controller
+### Dot Net FrameWork 6.0.6 Context generated from all tables in a database script ###
+## Parameters
+# 1. @api_name = API name
+# 2. @db_name = DataBase name
+# 3. @tables =  All tables in the Database Script
+# 4. @stored_procedures = All Columns in the Database Script
+def get_context(api_name, db_name, tables, stored_procedures):
+
+    # Declare Variables
+    text = ""
+
+    # Write Imports
+    text += "using " + api_name + ".Models;\n"
+    text += "using Microsoft.EntityFrameworkCore;\n"
+    text += "\n"
+    
+    # Write Namespace, Class Start and Constructor
+    text += "namespace " + api_name + ".Data\n"
+    text += "{\n"
+    text += "\tpublic class "+db_name+"DbContext : DbContext\n"
+    text += "\t{\n"
+    text += "\t\tpublic "+db_name+"DbContext(DbContextOptions<"+db_name+"DbContext> options)\n"
+    text += "\t\t: base(options)\n"
+    text += "\t\t{\n"
+    text += "\t\t}\n"
+    text += "\n"
+
+    # Write for all tables in sql script
+    for table in tables:
+        text += "\t\tpublic DbSet<"+table["name"]+"> "+table["name"]+" { get; set; } = null!;\n"
+    
+    # Write for all Stored Procedures in sql script
+    if (len(stored_procedures) > 0):
+        text += "\n\t\t// ---------------------------- Stored Procedures ---------------------------- \n\n"
+        for sp in stored_procedures:
+            text += "\t\tpublic DbSet<"+sp["name"]+"> "+sp["name"]+" { get; set; } = null!;\n"
+
+    # Close code
+    text += "\n"
+    text += "\t\t}\n"
+    text += "}"
+
+    return text
+    
+
+
+####################################################
+## 2. Generate Method Code Functions
+####################################################         
+
+
+
+### Dot Net FrameWork 6.0.6 Get All Method generated for default controller ###
+## Parameters
+# 1. @model_name = Model name
 def get_get_all_method(model_name):
     text = ""
     text += "\t\t// GET: api/" + model_name + "\n"
@@ -159,7 +260,9 @@ def get_get_all_method(model_name):
     return text
 
 
-# Get Method used in the controller
+### Dot Net FrameWork 6.0.6 Get By Id Method generated for default controller ###
+## Parameters
+# 1. @model_name = Model name
 def get_get_by_id_method(model_name):
     text = ""
     text += "\t\t// GET: api/" + model_name + "/5\n"
@@ -183,7 +286,11 @@ def get_get_by_id_method(model_name):
     return text
 
 
-# Post Method used in the controller
+### Dot Net FrameWork 6.0.6 Post Method generated for default controller ###
+## Parameters
+# 1. @model_name = Model name
+# 2. @db_name = DataBase name
+# 3. @first_column_name = The id / primary key of the model
 def get_post_method(model_name, db_name, first_column_name):
     text = ""
     text += "\t\t// POST: api/" + model_name + "\n"
@@ -205,7 +312,9 @@ def get_post_method(model_name, db_name, first_column_name):
     return text
 
 
-# Put Method used in the controller
+### Dot Net FrameWork 6.0.6 Put Method generated for default controller ###
+## Parameters
+# 1. @model_name = Model name
 def get_put_method(model_name):
     text = ""
     text += "\t\t// PUT: api/" + model_name + "/5\n"
@@ -237,7 +346,9 @@ def get_put_method(model_name):
     return text
 
 
-# Delete Method used in the controller
+### Dot Net FrameWork 6.0.6 Delete Method generated for default controller ###
+## Parameters
+# 1. @model_name = Model name
 def get_delete_method(model_name):
     text = ""
     text += "\t\t// DELETE: api/" + model_name + "/5\n"
@@ -257,43 +368,16 @@ def get_delete_method(model_name):
     return text
 
 
-# Context of dot Net FrameWork 6.0.6
-def get_context(api_name, db_name, tables, stored_procedures):
-    text = ""
 
-    text += "using " + api_name + ".Models;\n"
-    text += "using Microsoft.EntityFrameworkCore;\n"
-    text += "\n"
-    text += "namespace " + api_name + ".Data\n"
-    text += "{\n"
-    text += "\tpublic class "+db_name+"DbContext : DbContext\n"
-    text += "\t{\n"
-    text += "\t\tpublic "+db_name+"DbContext(DbContextOptions<"+db_name+"DbContext> options)\n"
-    text += "\t\t: base(options)\n"
-    text += "\t\t{\n"
-    text += "\t\t}\n"
-    text += "\n"
-
-    for table in tables:
-        text += "\t\tpublic DbSet<"+table["name"]+"> "+table["name"]+" { get; set; } = null!;\n"
-    
-    if (len(stored_procedures) > 0):
-        text += "\n\t\t// ---------------------------- Stored Procedures ---------------------------- \n\n"
-        for sp in stored_procedures:
-            text += "\t\tpublic DbSet<"+sp["name"]+"> "+sp["name"]+" { get; set; } = null!;\n"
-
-    text += "\n"
-    text += "\t\t}\n"
-    text += "}"
-    return text
-    
-
-# Properties of dot Net FrameWork 6.0.6
-def get_properties():
-    return get_launch_settings()
+####################################################
+## 3. Generate Other Files
+####################################################         
 
 
-# Launch Settings of dot Net FrameWork 6.0.6
+
+### Dot Net FrameWork 6.0.6 Launch Settings code generated based on the api name ###
+## Parameters
+# 1. @api_name = API name
 def get_launch_settings(api_name):
     text = ""
     text += "{\n"
@@ -330,7 +414,9 @@ def get_launch_settings(api_name):
     return text
 
 
-# App Settings of dot Net FrameWork 6.0.6
+### Dot Net FrameWork 6.0.6 App Settings code generated based on the database name ###
+## Parameters
+# 1. @db_name = DataBase name
 def get_app_settings(db_name):
     text = ""
     text += "{\n"
@@ -350,7 +436,7 @@ def get_app_settings(db_name):
     return text
 
 
-# App Settings Development of dot Net FrameWork 6.0.6
+### Dot Net FrameWork 6.0.6 App Settings Development default code generated ###
 def get_app_settings_dev():
     text = ""
     text += "{\n"
@@ -364,7 +450,10 @@ def get_app_settings_dev():
     return text
 
 
-# Program of dot Net FrameWork 6.0.6
+### Dot Net FrameWork 6.0.6 Program code generated based on the api name and database name ###
+## Parameters
+# 1. @api_name = API name
+# 2. @db_name = DataBase name
 def get_program(api_name, db_name):
     text = ""
     text += "using Microsoft.EntityFrameworkCore;\n"
@@ -404,7 +493,7 @@ def get_program(api_name, db_name):
     return text
 
 
-# Project File of dot Net FrameWork 6.0.6
+### Dot Net FrameWork 6.0.6 Project File default code generated ###
 def get_project_file():
     text = ""
     text += "<Project Sdk=\"Microsoft.NET.Sdk.Web\">\n"
@@ -438,7 +527,15 @@ def get_project_file():
     return text
 
 
-# Type of variable converted from sql server type
+
+####################################################
+## 4. Utils
+####################################################         
+
+
+### Convert from a selected Db Type a Variable Type to Csharp Variable Type ###
+## Parameters
+# 1. @db_name = DataBase name
 def get_var_type(db_type):
 
     # Open dictionary
@@ -455,7 +552,7 @@ def get_var_type(db_type):
     return result
 
 
-# Dictionary that covert variable types in sql server to csharp
+### Dictionary that covert variable types in sql server to csharp ###
 def get_sql_server_to_cs_dictionary():
     return {
         "VARCHAR":"string?",

@@ -1,12 +1,37 @@
+####################################################
+## Py-Script Documentation -> https://github.com/pyscript/pyscript/blob/main/docs/tutorials/getting-started.md
+
+# Abstract: Library with the purpose of downloading any type of API. Currently available only .NET Framework 5.0 & 6.0
+# Author: André Cerqueira
+# Start Date: 25/06/2022
+# Last Update Date: 12/07/2022
+# Current Version: 2.0
+
+####################################################
+
+
+####################################################
+## 1. Imports
+####################################################  
+
+
 from utils import *
 import dbReader
-import dotNetFrameWork5,dotNetFrameWork6
+import dotNetFrameWork5, dotNetFrameWork6
 import js, json
+EXTENSION = ".cs" # FOR NOW ALL THE CODE DONE HERE WAS DONE ASSUMING .NET FRAMEWORK 6.0 IS SELECTED
 
-# ALL THE CODE DONE HERE WAS DONE ASSUMING .NET FRAMEWORK 6.0 IS SELECTED
 
-EXTENSION = ".cs"
 
+####################################################
+## 2. Download API
+####################################################  
+
+
+
+### Download API based on a selected API and Database ###
+## Parameters
+# 1. @event = event of download button clicked
 def download_api(event):
 
     # Get data in data base
@@ -32,7 +57,7 @@ def download_api(event):
     custom_controllers_json = json.dumps(custom_controllers)
     db_data = json.dumps({"filename": "storedProcedures.json", "code": str(stored_procedures)})
     
-    
+    # [Temporary Code] if version 6 build with other files
     if (api_type == "dot-net-framework-6"):
         launch_settings = get_launch_settings_code(api_name)
         app_settings = get_app_settings_code(db_name)
@@ -50,9 +75,20 @@ def download_api(event):
     else:
         
         js.downloadAPI(str(models_json), str(controllers_json), str(context_json), str(custom_models_json), str(custom_controllers_json), str(db_data), api_name)
-    
 
-# Create all Models in each table
+
+
+####################################################
+## 3. Generate API Files Functions
+####################################################  
+
+
+
+### Get all models files for each table in database ###
+## Parameters
+# 1. @api_name = API name
+# 2. @api_type = API type
+# 3. @tables = All tables in database
 def get_models(api_name, api_type, tables):
     models = []
 
@@ -65,7 +101,12 @@ def get_models(api_name, api_type, tables):
     return models
 
 
-# Create all controllers in each table 
+### Get all controllers files for each table in database ###
+## Parameters
+# 1. @api_name = API name
+# 2. @api_type = API type
+# 3. @db_name = Database name
+# 4. @tables = All tables in database
 def get_controllers(api_name, api_type, db_name, tables):
     controllers = []
 
@@ -78,7 +119,11 @@ def get_controllers(api_name, api_type, db_name, tables):
     return controllers
 
 
-# Create all Models in each stored procedure 
+### Get all Models files for each stored procedure in database ###
+## Parameters
+# 1. @api_name = API name
+# 2. @api_type = API type
+# 3. @stored_procedures = All stored procedures in database
 def get_custom_models(api_name, api_type, stored_procedures):
     custom_models = []
 
@@ -91,7 +136,12 @@ def get_custom_models(api_name, api_type, stored_procedures):
     return custom_models
 
 
-# Create all controllers in each stored procedure 
+### Get all Controllers files for each stored procedure in database ###
+## Parameters
+# 1. @api_name = API name
+# 2. @api_type = API type
+# 3. @db_name = Database name
+# 4. @stored_procedures = All stored procedures in database
 def get_custom_controllers(api_name, api_type, db_name, stored_procedures):
     custom_controllers = []
 
@@ -104,7 +154,13 @@ def get_custom_controllers(api_name, api_type, db_name, stored_procedures):
     return custom_controllers
 
 
-# Create context file based on all tables and stored procedure 
+### Get Context file based on all tables and stored procedure  ###
+## Parameters
+# 1. @api_name = API name
+# 2. @api_type = API type
+# 3. @db_name = Database name
+# 4. @tables = All tables in database
+# 5. @stored_procedures = All stored procedures in database
 def get_context(api_name, api_type, db_name, tables, stored_procedures):
 
     code = get_context_code(api_name, api_type, db_name, tables, stored_procedures)
@@ -114,7 +170,19 @@ def get_context(api_name, api_type, db_name, tables, stored_procedures):
     return context
 
 
-# Get model code depending on the selected api type
+
+####################################################
+## 4. Generate API Scripts Functions
+####################################################  
+
+
+
+### Get model code based on the selected api type ###
+## Parameters
+# 1. @api_name = API name
+# 2. @api_type = API type
+# 3. @model_name = Database name
+# 4. @columns = All Columns in the (api_name) table
 def get_model_code(api_name, api_type, model_name, columns):
     model = {
         "dot-net-framework-5": dotNetFrameWork5.get_model(api_name, model_name, columns),
@@ -123,7 +191,13 @@ def get_model_code(api_name, api_type, model_name, columns):
     return model[api_type]
 
 
-# Get controller code depending on the selected api type
+### Get controller code based on the selected api type ###
+## Parameters
+# 1. @api_name = API name
+# 2. @api_type = API type
+# 3. @db_name = Database name
+# 4. @model_name = Database name
+# 5. @columns = All Columns in the (api_name) table
 def get_controller_code(api_name, api_type, db_name, model_name, columns):
     model = {
         "dot-net-framework-5": dotNetFrameWork5.get_controller(api_name, db_name, model_name, columns),
@@ -132,7 +206,13 @@ def get_controller_code(api_name, api_type, db_name, model_name, columns):
     return model[api_type]
 
 
-# Get context code depending on the selected api type
+### Get context code based on the selected api type ###
+## Parameters
+# 1. @api_name = API name
+# 2. @api_type = API type
+# 3. @db_name = Database name
+# 4. @tables = All tables in database
+# 5. @stored_procedures = All stored procedures in database
 def get_context_code(api_name, api_type, db_name, tables, stored_procedures):
     model = {
         "dot-net-framework-5": dotNetFrameWork5.get_context(api_name, db_name, tables, stored_procedures),
@@ -141,7 +221,15 @@ def get_context_code(api_name, api_type, db_name, tables, stored_procedures):
     return model[api_type]
 
 
-# Get other files for version 6.0.6 of dotnet
+
+####################################################
+## 5. Generate Other API Files Functions
+####################################################  
+
+
+
+### [TEMPORARY] Get other files for version 6.0.6 of dotnet
+
 def get_launch_settings_code(api_name):
     return dotNetFrameWork6.get_launch_settings(api_name)
 
