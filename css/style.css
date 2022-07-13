@@ -20,6 +20,12 @@
   padding-top: 2%;
   align-content: center;
 }
+
+.api-maker-div-bottom {
+  padding-top: 2%;
+  padding-bottom: 2%;
+  align-content: center;
+}
   
 /* Style the tab */
 .tab {

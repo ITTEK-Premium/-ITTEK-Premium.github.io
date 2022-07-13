@@ -4,8 +4,8 @@
 # Abstract: Library with all functions to read any type of Database creation script. Currently available only SQL Server.
 # Author: André Cerqueira
 # Start Date: 25/06/2022
-# Last Update Date: 12/07/2022
-# Current Version: 2.0
+# Last Update Date: 13/07/2022
+# Current Version: 2.1
 
 ####################################################
 
@@ -100,6 +100,52 @@ def get_stored_procedures(db_data, tables):
             current_line += line
 
     return stored_procedures
+
+
+### Get all queries in a stored procedure ###
+## Parameters
+# 1. @db_data = Database creation script code text
+# 2. @stored_procedure_name = Store Procedure name
+def get_queries_in_stored_procedure(db_data, tables, stored_procedure_name):
+
+    queries = []
+    
+    # Get all lines in the database script
+    lines = db_data.splitlines()
+
+    # Read database script
+    current_line = ""
+    select_count = 0
+    found = False
+    for line in lines:
+
+        # Search for stored procedures
+        if (not found and "CREATE PROCEDURE" in line and stored_procedure_name in line):
+            found = True
+
+        # End of the Store Procedure
+        elif ("GO" in line and found):
+            found = False
+
+            for i in range(select_count):
+                query = get_stored_procedure_columns_in_position(tables, current_line, i, stored_procedure_name)
+                select_count += 1
+                queries.append(query)
+                # queries.append({"name":stored_procedure_name, "columns":columns})
+
+            break
+        
+        elif ("AS" == line):
+            current_line += "\nAS\n"
+        elif (current_line != ""):
+            current_line += line
+
+        # Get all sub queries
+        if (found):
+            if ("SELECT" in line):
+                select_count += 1
+
+    return queries
 
 
 
@@ -285,6 +331,106 @@ def get_stored_procedure_columns(tables, line):
             columns.append({"name":col_name,"type":col_type,"length":type_lenght})
 
     return columns
+
+
+# TODO CREATE DOCUMENTATION
+def get_stored_procedure_columns_in_position(tables, line, position, stored_procedure_name):
+    columns = []
+    names = []
+
+    # nao é só uma line é um conjunto de linhas ate AS
+
+    # All Columns are after ] 
+    # Each column and type are before ,
+
+    line_splited = line.split("]")
+    columns_in_line = line_splited[len(line_splited)-1]
+
+    temp = columns_in_line.split("\nAS\n")
+
+    columns_in_line = temp[0]
+    stored_procedure_code = temp[1]
+
+    columns_in_line = columns_in_line.replace("\n", "")
+    columns_in_line = columns_in_line.replace("\t", "")
+    stored_procedure_code = stored_procedure_code.replace("\n", "")
+    stored_procedure_code = stored_procedure_code.replace("\t", "")
+
+    raw_columns = columns_in_line.split(",")
+
+    # SELECT get the columns in the SELECT line
+    if ("SELECT" in stored_procedure_code):
+
+        # ex: dv.id as drawing_version_id, c.id as client_id, d.drawing_number, dv.version, dv.color_quantity, sv.description as service_description, dv.width, dv.height, d.observation, d.image
+        
+        # FIND ALL QUERY NAMES IN COMMENTS
+        all_select_store_procedures_names = stored_procedure_code.split("--")
+        for query_name in all_select_store_procedures_names:
+            new_name = query_name.split("SELECT")[0]
+            names.append(new_name)
+
+        all_select_store_procedures = stored_procedure_code.split("SELECT")
+
+        # Skip always the 1 element in the list because is the create procedure line
+        for index, select_store_procedures in enumerate(all_select_store_procedures):
+
+            if (index != position+1):
+                continue
+
+            select_columns_in_line = select_store_procedures.split("FROM")[0]
+            select_raw_columns = select_columns_in_line.split(",")
+
+            for raw_column in select_raw_columns:
+
+                delim = None
+                if (" as " in raw_column):
+                    delim = " as "
+                elif (" AS " in raw_column):
+                    delim = " AS "
+
+                if (delim != None):
+                    
+                    # Get column original name in tables
+                    col_original_name = raw_column.split(delim)[0] # check for . and split
+                    if ("." in col_original_name):
+                        col_original_name = col_original_name.split(".")[1]
+                    col_original_name = col_original_name.replace(" ", "")
+
+                    # Get column new name choosed by the developer
+                    col_new_name = raw_column.split(delim)[1]
+                    col_new_name = col_new_name.replace(" ", "")
+
+                    # MISSING TYPE FOR NOW
+                    col_type = get_type_in_stored_procedure(tables, col_original_name)
+                    type_lenght = None
+
+                    columns.append({"name":col_new_name,"type":col_type,"length":type_lenght})
+                else:
+                    # Get column name
+                    col_name = raw_column
+                    if ("." in col_name):
+                        col_name = col_name.split(".")[1]
+                    col_name = col_name.replace(" ", "")
+                    
+                    # MISSING TYPE FOR NOW
+                    col_type = get_type_in_stored_procedure(tables, col_name)
+                    type_lenght = None
+
+                    columns.append({"name":col_name,"type":col_type,"length":type_lenght})
+
+    # INSERT AND UPDATE get the columns in the procedure header
+    else:
+        for raw_column in raw_columns:
+            col_name = raw_column.split("@")[1].split(" ")[0]
+            col_type = raw_column.split("@")[1].split(" ")[1]
+            type_lenght = None
+            columns.append({"name":col_name,"type":col_type,"length":type_lenght})
+
+    try:
+        new_name = names[position+1].replace(" ", "")
+        return {"name":new_name, "columns":columns}
+    except:
+        return {"name":stored_procedure_name, "columns":columns}
 
 
 ### Get variable type for a variable in a stored procedure ###

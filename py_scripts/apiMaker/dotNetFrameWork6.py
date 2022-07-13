@@ -5,8 +5,8 @@
 # Abstract: Library with all functions to build an API with .NET FrameWork 6.0.6
 # Author: André Cerqueira
 # Start Date: 01/07/2022
-# Last Update Date: 12/07/2022
-# Current Version: 1.1
+# Last Update Date: 13/07/2022
+# Current Version: 1.2
 
 ####################################################
 
@@ -20,8 +20,8 @@
 ## Parameters
 # 1. @api_name = API name
 # 2. @model_name = Model name
-# 3. @columns = All columns in the (api_name) table
-def get_model(api_name, model_name, columns, isStoredProcedure):
+# 3. #TODO @columns = All columns in the (api_name) table
+def get_model(api_name, main_model_name, sub_models, isStoredProcedure):
 
     # Declare Variables
     text = ""
@@ -29,6 +29,10 @@ def get_model(api_name, model_name, columns, isStoredProcedure):
 
     # Write Imports
     text += "using System.ComponentModel.DataAnnotations;\n"
+    
+    if (isStoredProcedure):
+        text += "using Microsoft.EntityFrameworkCore;\n"
+
     text += "using Newtonsoft.Json;\n"
     text += "\n"
     if (isStoredProcedure):
@@ -36,44 +40,55 @@ def get_model(api_name, model_name, columns, isStoredProcedure):
     else:
         text += "namespace " + api_name + ".Models\n"
     text += "{\n"
+
+    # Write Class for each model in this model script
+    for model in sub_models:
+
+        # Check need for Keyless, basically check if model has Get, Add or Update in name
+        isKeyless = ("get" in model["name"].lower() or "add" in model["name"].lower() or "update" in model["name"].lower())
+        if (isKeyless):
+            text += "\t[Keyless]\n"
+
+        text += "\tpublic class " + model["name"] + "\n"
+        text += "\t{\n"
+        if (not isKeyless):
+            text += "\t\t[Key]\n"
+
+        # Write Every Variable and Variable Type
+        for column in model["columns"]:
+            
+            var_type = get_var_type(column["type"])
+
+            # get_name_without_first()
+            text += "\t\t[JsonProperty(PropertyName = \"" + column["name"] + "\")]\n" 
+            text += "\t\tpublic "+var_type+" "+column["name"]+" { get; set; }\n\n"
+
+        # Close Model
+        text += "\t}\n\n"
     
-    # Write Class
+    # Create Main Model to concatenate every model if necessary
+    if (len(sub_models) > 1):
+        # Check need for Keyless, basically check if model has Get, Add or Update in name
+        isKeyless = ("get" in main_model_name.lower() or "add" in main_model_name.lower() or "update" in main_model_name.lower())
+        if (isKeyless):
+            text += "\t[Keyless]\n"
 
-    # Check need for Keyless, basically check if model has Get, Add or Update in name
-    isKeyless = ("get" in model_name.lower() or "add" in model_name.lower() or "update" in model_name.lower())
-    if (isKeyless):
-        text += "\t[Keyless]\n"
+        text += "\tpublic class " + main_model_name + "\n"
+        text += "\t{\n"
+        if (not isKeyless):
+            text += "\t\t[Key]\n"
 
-    text += "\tpublic class " + model_name + "\n"
-    text += "\t{\n"
-    if (not isKeyless):
-        text += "\t\t[Key]\n"
+        # Write Every Variable and Variable Type
+        for model in sub_models:
+            
+            var_name = model["name"][0].lower() + model["name"][1:]
+            text += "\t\t[JsonProperty(PropertyName = \"" + var_name + "\")]\n" 
+            text += "\t\tpublic List<"+model["name"]+">? "+ var_name +" { get; set; }\n\n"
 
-    # Write Every Variable and Variable Type
-    for column in columns:
-
-        var_type = get_var_type(column["type"])
-
-        names = column["name"].split("_")
-        name_without_first = ""
-        for index, name in enumerate(names):
-            if index != 0:
-                name_without_first += name
-                if (index < len(names)-1):
-                    name_without_first += "_"
-
-        if ("id" in name_without_first or name_without_first == ""):
-            name_without_first = column["name"]
-
-        # Check starting with number
-        if (name_without_first[0].isnumeric()):
-            name_without_first = column["name"]
-
-        text += "\t\t[JsonProperty(PropertyName = \"" + name_without_first + "\")]\n"
-        text += "\t\tpublic "+var_type+" "+column["name"]+" { get; set; }\n"
+        # Close Model
+        text += "\t}\n\n"
 
     # Close Code
-    text += "\t}\n"
     text += "}"
 
     return text
@@ -92,11 +107,6 @@ def get_controller(api_name, db_name, model_name, columns):
     first_column_name = columns[0]["name"]
 
     # Write Imports
-    text += "using System;\n"
-    text += "using System.Collections.Generic;\n"
-    text += "using System.Linq;\n"
-    text += "using System.Threading.Tasks;\n"
-    text += "using Microsoft.AspNetCore.Http;\n"
     text += "using Microsoft.AspNetCore.Mvc;\n"
     text += "using Microsoft.EntityFrameworkCore;\n"
     text += "using " + api_name + ".Data;\n"
@@ -155,21 +165,14 @@ def get_controller(api_name, db_name, model_name, columns):
 # 3. Build Individual Controller -DONE
 # 4. Get with parameters -DONE
 # 5. Build Multi Model Controller
-def get_stored_procedure_controller(api_name, db_name, model_name, columns, headers):
+def get_stored_procedure_controller(api_name, db_name, model_name, columns, headers, sub_models):
     text = ""
 
-    # Get Store Procedure name
-    print("name --> " + model_name)
-
-    text += "using System;\n"
-    text += "using System.Collections.Generic;\n"
-    text += "using System.Linq;\n"
-    text += "using System.Threading.Tasks;\n"
-    text += "using Microsoft.AspNetCore.Http;\n"
     text += "using Microsoft.AspNetCore.Mvc;\n"
     text += "using Microsoft.EntityFrameworkCore;\n"
     text += "using " + api_name + ".Data;\n"
-    text += "using " + api_name + ".Models;\n"
+    text += "using " + api_name + ".Models.StoredProcedures;\n"
+    text += "using System.Data;\n"
     text += "\n"
     text += "namespace " + api_name + ".Controllers.StoredProcedures\n"
     text += "{\n"
@@ -197,16 +200,99 @@ def get_stored_procedure_controller(api_name, db_name, model_name, columns, head
     text += "\t\t}\n"
     text += "\n"
 
-    # Get Stored Procedure Type (SELECT, INSERT, UPDATE, DELETE) # TODO DELETE
-    method_code = ""
-    if ("get" in model_name.lower()):
-        method_code = get_get_stored_procedure_method(model_name, headers)
-    elif ("add" in model_name.lower()):
-        method_code = get_post_stored_procedure_method(model_name, columns)
-    elif ("update" in model_name.lower()):
-        method_code = get_put_stored_procedure_method(model_name, columns)
+    # Check Sub Model Quantity in Store Procedure To change the code
+    if (len(sub_models) > 1):
 
-    text += method_code
+        # Create Method
+        text += "\t\t// GET: api/"+model_name+"\n"
+        text += "\t\t[HttpGet]\n"
+        text += "\t\tpublic async Task<GetProductionScreen?> Get(\n"
+        
+        # Set all parameters
+        if (headers != None):
+            for index, header in enumerate(headers):
+                type_converted = get_var_type(header["type"])
+                text += type_converted +" "+header["name"]
+                if (index < len(headers)-1):
+                    text += ", "
+        text += ")\n"
+        
+        text += "\t\t{\n"
+        text += "\t\t\tif (_context.GetProductionScreen == null)\n"
+        text += "\t\t\t{\n"
+        text += "\t\t\t\treturn null;\n"
+        text += "\t\t\t}\n"
+        text += "\n"
+        
+        # Create Connection
+        text += "\t\t\tvar connection = _context.Database.GetDbConnection();\n"
+        text += "\t\t\tawait connection.OpenAsync();\n"
+        text += "\n"
+
+        text += "\t\t\tvar command = connection.CreateCommand();\n"
+
+        # Create Command
+        text += "\t\t\tcommand.CommandText = $\"EXEC "+model_name
+        if (headers != None):
+            for index, header in enumerate(headers):
+                text += " @"+header["name"]+" = {"+header["name"]+"}"
+                if index < len(headers)-1:
+                    text += ","
+        text += ";\";\n"
+
+        text += "\t\t\tcommand.CommandType = CommandType.Text;\n"
+        text += "\n"
+        text += "\t\t\tvar reader = await command.ExecuteReaderAsync();\n"
+
+        # Loop for each sub model
+        for sub_model in sub_models:
+            var_name = sub_model["name"][0].lower() + sub_model["name"][1:]
+            text += "\t\t\tvar "+var_name+" = new List<"+sub_model["name"]+">();\n"
+        text += "\n"
+
+        # Loop for each sub model
+        
+        for index, sub_model in enumerate(sub_models):
+            var_name = sub_model["name"][0].lower() + sub_model["name"][1:]
+            text += "\t\t\twhile (await reader.ReadAsync())\n"
+            text += "\t\t\t{\n"
+            text += "\t\t\t\t"+var_name+".Add(new "+sub_model["name"]+"(\n"
+            for column in sub_model["columns"]:
+                text += "\t\t\t\t\treader.GetString(\""+column["name"]+"\"),\n" # TODO TYPE GetInt32
+            text += "\t\t\t\t));\n"
+            text += "\t\t\t}\n"
+            text += "\n"
+
+            if (index < len(sub_models)-1):
+                text += "\t\t\tawait reader.NextResultAsync();\n"
+            else:
+                text += "\t\t\tawait reader.CloseAsync();\n"
+            text += "\n"
+
+        # Create result with sub model loop
+        text += "\t\t\tvar query = new GetProductionScreen("
+        for index, sub_model in enumerate(sub_models):
+            var_name = sub_model["name"][0].lower() + sub_model["name"][1:]
+            text += var_name
+            if (index < len(sub_models)-1):
+                text += ", "
+                
+        text += ");\n"
+        text += "\t\t\treturn query;\n"
+        text += "\t\t}\n"
+
+    else:
+
+        # Get Stored Procedure Type (SELECT, INSERT, UPDATE, DELETE) # TODO DELETE
+        method_code = ""
+        if ("get" in model_name.lower()):
+            method_code = get_get_stored_procedure_method(model_name, headers)
+        elif ("add" in model_name.lower()):
+            method_code = get_post_stored_procedure_method(model_name, columns)
+        elif ("update" in model_name.lower()):
+            method_code = get_put_stored_procedure_method(model_name, columns)
+
+        text += method_code
 
     # End
     text += "\t}\n"
@@ -227,6 +313,7 @@ def get_context(api_name, db_name, tables, stored_procedures):
 
     # Write Imports
     text += "using " + api_name + ".Models;\n"
+    text += "using " + api_name + ".Models.StoredProcedures;\n"
     text += "using Microsoft.EntityFrameworkCore;\n"
     text += "\n"
     
@@ -531,7 +618,7 @@ def get_launch_settings(api_name):
 ### Dot Net FrameWork 6.0.6 App Settings code generated based on the database name ###
 ## Parameters
 # 1. @db_name = DataBase name
-def get_app_settings(db_name):
+def get_app_settings(db_name, connection_string):
     text = ""
     text += "{\n"
     text += "\t\"Logging\": {\n"
@@ -542,7 +629,7 @@ def get_app_settings(db_name):
     text += "\t},\n"
     text += "\t\"AllowedHosts\": \"*\",\n"
     text += "\t\"ConnectionStrings\": {\n"
-    text += "\t\"" + db_name + "\": \"[MISSING]\"\n" # TODO INSERT DB CREDENTIALS
+    text += "\t\"" + db_name + "\": \""+connection_string+"\"\n" # TODO INSERT DB CREDENTIALS
     text += "\t},\n"
     text += "\t\"ReApiKey\": \"pgH7QzFHJx4w46fI~5Uzi4RvtTwlEXp\"\n"
     text += "\t\n"
@@ -641,11 +728,76 @@ def get_project_file():
     return text
 
 
+### Dot Net FrameWork 6.0.6 Middleware File default code generated ###
+def get_middleware():
+    text = ""
+    text += "public class ApiKeyMiddleware {\n"
+    text += "\tprivate readonly RequestDelegate _next;\n"
+    text += "\tprivate\n"
+    text += "\tconst string APIKEY = \"ReApiKey\";\n"
+    text += "\tpublic ApiKeyMiddleware(RequestDelegate next) {\n"
+    text += "\t\t_next = next;\n"
+    text += "\t}\n"
+    text += "\tpublic async Task InvokeAsync(HttpContext context) {\n"
+    text += "\t\tif (!context.Request.Headers.TryGetValue(APIKEY, out\n"
+    text += "\t\t\t\tvar extractedApiKey)) {\n"
+    text += "\t\t\tcontext.Response.StatusCode = 401;\n"
+    text += "\t\t\tawait context.Response.WriteAsync(\"Api Key was not provided \");\n"
+    text += "\t\t\treturn;\n"
+    text += "\t\t}\n"
+    text += "\n"
+    text += "\t\t// Get API key value\n"
+    text += "\t\tvar appSettings = context.RequestServices.GetRequiredService < IConfiguration > ();\n"
+    text += "\t\tvar apiKey = appSettings.GetValue < string > (APIKEY);\n"
+    text += "\n"
+    text += "\t\tif (!apiKey.Equals(extractedApiKey)) {\n"
+    text += "\t\t\tcontext.Response.StatusCode = 401;\n"
+    text += "\t\t\tawait context.Response.WriteAsync(\"Unauthorized client\");\n"
+    text += "\t\t\treturn;\n"
+    text += "\t\t}\n"
+    text += "\t\t\n"
+    text += "\t\tawait _next(context);\n"
+    text += "\t}\n"
+    text += "}\n"
+    return text
+
+
+### Dot Net FrameWork 6.0.6 Readme File default code generated ###
+def get_readme():
+    text = ""
+    text += "# Packages\n\n"
+    text += "1. dotnet add package Microsoft.EntityFrameworkCore --version 6.0.7\n"
+    text += "2. dotnet add package Microsoft.EntityFrameworkCore.Design\n"
+    text += "3. dotnet add package Microsoft.EntityFrameworkCore.SqlServer\n"
+    return text
+
+
 
 ####################################################
 ## 4. Utils
 ####################################################         
 
+
+### Convert a varible name to a more smaller version ###
+## TODO Everything
+def get_name_without_first():
+    ''' # TODO name_without_first
+    names = column["name"].split("_")
+    name_without_first = ""
+    for index, name in enumerate(names):
+        if index != 0:
+            name_without_first += name
+            if (index < len(names)-1):
+                name_without_first += "_"
+
+    if ("id" in name_without_first or name_without_first == ""):
+        name_without_first = column["name"]
+
+    # Check starting with number
+    if (name_without_first[0].isnumeric()):
+        name_without_first = column["name"]
+    '''
+    pass
 
 
 ### Convert from a selected Db Type a Variable Type to Csharp Variable Type ###

@@ -92,7 +92,7 @@ function downloadAPI(models, controllers, context, custom_models, custom_control
   }
 
 
-  function downloadAPI6(models, controllers, context, custom_models, custom_controllers, launch_settings, app_settings, app_settings_dev, program, project_file, folderName) {
+  function downloadAPI6(models, controllers, context, custom_models, custom_controllers, launch_settings, app_settings, app_settings_dev, program, project_file, middleware, readme, folderName) {
 
     const zip = new JSZip();
 
@@ -122,7 +122,9 @@ function downloadAPI(models, controllers, context, custom_models, custom_control
 
     // Create context
     const contextObject = JSON.parse(context);  
-    zip.folder("Context").file(contextObject.filename, contextObject.code);
+    const middlewareObject = JSON.parse(middleware);  
+    zip.folder("Data").file(contextObject.filename, contextObject.code);
+    zip.folder("Data").file(middlewareObject.filename, middlewareObject.code);
 
     // Create Properties
     const launchObject = JSON.parse(launch_settings);  
@@ -137,6 +139,10 @@ function downloadAPI(models, controllers, context, custom_models, custom_control
     // Create Program & project
     const program_Object = JSON.parse(program);  
     zip.file(program_Object.filename, program_Object.code); 
+
+    // Create Readme
+    const readme_Object = JSON.parse(readme);  
+    zip.file(readme_Object.filename, readme_Object.code); 
     
     const project_file_Object = JSON.parse(project_file);  
     zip.file(project_file_Object.filename, project_file_Object.code);
@@ -153,7 +159,19 @@ function getSelectedDbData() {
 }
 
 function getApiName() {
-  return document.getElementById('inputClassName').value;
+  var value = document.getElementById('inputClassName').value
+
+  if (value == "")
+    return "Default"
+
+  return (value != null) ? value : "Default";
+}
+
+function getConnectionString() {
+  var value = document.getElementById('inputConnectionString').value
+  if (value == "")
+    return "MISSING"
+  return (value != null) ? value : "MISSING";
 }
 
 function getApiType() {
