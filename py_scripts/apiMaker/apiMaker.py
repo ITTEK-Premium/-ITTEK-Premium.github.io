@@ -4,8 +4,8 @@
 # Abstract: Library with the purpose of downloading any type of API. Currently available only .NET Framework 5.0 & 6.0
 # Author: André Cerqueira
 # Start Date: 25/06/2022
-# Last Update Date: 13/07/2022
-# Current Version: 2.1
+# Last Update Date: 14/07/2022
+# Current Version: 2.2
 
 ####################################################
 
@@ -42,7 +42,7 @@ def download_api(event):
     db_name = dbReader.get_name(db_data)
     tables = dbReader.get_tables(db_data)
     stored_procedures = dbReader.get_stored_procedures(db_data, tables)
-    
+
     # Generate API
     models = get_models(api_name, api_type, tables)
     controllers = get_controllers(api_name, api_type, db_name, tables)
@@ -133,6 +133,7 @@ def get_custom_models(db_data, tables, api_name, api_type, stored_procedures):
     custom_models = []
 
     for sp in stored_procedures:
+        
         sub_models = dbReader.get_queries_in_stored_procedure(db_data, tables, sp["name"])
         code = get_custom_model_code(api_name, api_type, sp["name"], sub_models)
         filename = sp["name"] + EXTENSION

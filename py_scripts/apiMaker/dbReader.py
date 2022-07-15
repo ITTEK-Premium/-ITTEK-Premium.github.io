@@ -4,8 +4,8 @@
 # Abstract: Library with all functions to read any type of Database creation script. Currently available only SQL Server.
 # Author: André Cerqueira
 # Start Date: 25/06/2022
-# Last Update Date: 13/07/2022
-# Current Version: 2.1
+# Last Update Date: 14/07/2022
+# Current Version: 2.2
 
 ####################################################
 
@@ -14,6 +14,7 @@
 ## 1. Get Database primary data
 ####################################################  
 
+import re
 
 ### Get all tables data in Database ###
 ## Parameters
@@ -87,7 +88,7 @@ def get_stored_procedures(db_data, tables):
             columns = get_stored_procedure_columns(tables, current_line)
 
             # Get headers from Select
-            if ("SELECT" in current_line):
+            if ("SELECT" in current_line and "SCOPE_IDENTITY" not in current_line):
                 headers = get_stored_procedure_headers(current_line)
                 stored_procedures.append({"name":name, "columns":columns, "headers": headers})
             else:
@@ -122,6 +123,7 @@ def get_queries_in_stored_procedure(db_data, tables, stored_procedure_name):
         # Search for stored procedures
         if (not found and "CREATE PROCEDURE" in line and stored_procedure_name in line):
             found = True
+            current_line = line
 
         # End of the Store Procedure
         elif ("GO" in line and found):
@@ -142,9 +144,14 @@ def get_queries_in_stored_procedure(db_data, tables, stored_procedure_name):
 
         # Get all sub queries
         if (found):
-            if ("SELECT" in line):
+            if ("SELECT" in line and "SCOPE_IDENTITY" not in line):
                 select_count += 1
-
+            elif ("INSERT" in line or "UPDATE" in line):
+                headers = get_stored_procedure_headers(current_line)
+                query = {"name":stored_procedure_name, "columns":headers}
+                queries.append(query)
+                break
+    
     return queries
 
 
@@ -270,7 +277,7 @@ def get_stored_procedure_columns(tables, line):
     raw_columns = columns_in_line.split(",")
 
     # SELECT get the columns in the SELECT line
-    if ("SELECT" in stored_procedure_code):
+    if ("SELECT" in stored_procedure_code and "SCOPE_IDENTITY" not in stored_procedure_code):
 
         # ex: dv.id as drawing_version_id, c.id as client_id, d.drawing_number, dv.version, dv.color_quantity, sv.description as service_description, dv.width, dv.height, d.observation, d.image
         all_select_store_procedures = stored_procedure_code.split("SELECT")
@@ -282,7 +289,11 @@ def get_stored_procedure_columns(tables, line):
                 continue
 
             select_columns_in_line = select_store_procedures.split("FROM")[0]
-            select_raw_columns = select_columns_in_line.split(",")
+            
+            # remove every char between characters ( and ) to avoid errors with concat and others
+            new_select_columns_in_line = re.sub("([\(\[]).*?([\)\]])", "", select_columns_in_line)
+
+            select_raw_columns = new_select_columns_in_line.split(",")
 
             for raw_column in select_raw_columns:
 
@@ -359,7 +370,7 @@ def get_stored_procedure_columns_in_position(tables, line, position, stored_proc
     raw_columns = columns_in_line.split(",")
 
     # SELECT get the columns in the SELECT line
-    if ("SELECT" in stored_procedure_code):
+    if ("SELECT" in stored_procedure_code and "SCOPE_IDENTITY" not in stored_procedure_code):
 
         # ex: dv.id as drawing_version_id, c.id as client_id, d.drawing_number, dv.version, dv.color_quantity, sv.description as service_description, dv.width, dv.height, d.observation, d.image
         
@@ -378,7 +389,11 @@ def get_stored_procedure_columns_in_position(tables, line, position, stored_proc
                 continue
 
             select_columns_in_line = select_store_procedures.split("FROM")[0]
-            select_raw_columns = select_columns_in_line.split(",")
+            
+            # remove every char between characters ( and ) to avoid errors with concat and others
+            new_select_columns_in_line = re.sub("([\(\[]).*?([\)\]])", "", select_columns_in_line)
+            
+            select_raw_columns = new_select_columns_in_line.split(",")
 
             for raw_column in select_raw_columns:
 
@@ -506,7 +521,12 @@ def get_type_keyword_dictionary_sql_server():
     return {
         "quantity":"int",
         "count":"int",
-        "id":"int"
+        "id":"int",
+        "sum":"int",
+        "designation":"varchar",
+        "machine":"int",
+        "concat":"varchar",
+        "description":"varchar"
         }
 
 
@@ -514,9 +534,11 @@ def get_type_keyword_dictionary_sql_server():
 ## Parameters
 # 1. @keyword = variable name / column name
 def find_type_in_keyword_dictionary_sql_server(keyword):
+    new_keyword = keyword.lower()
     dictionary = get_type_keyword_dictionary_sql_server()
     for word in dictionary:
-        if word in keyword:
+        if word in new_keyword:
             return dictionary[word]
+    print("deu MISSING ")
     return "MISSING"
     

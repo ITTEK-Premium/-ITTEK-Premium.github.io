@@ -5,8 +5,8 @@
 # Abstract: Library with all functions to build an API with .NET FrameWork 6.0.6
 # Author: André Cerqueira
 # Start Date: 01/07/2022
-# Last Update Date: 13/07/2022
-# Current Version: 1.2
+# Last Update Date: 14/07/2022
+# Current Version: 1.3
 
 ####################################################
 
@@ -20,7 +20,7 @@
 ## Parameters
 # 1. @api_name = API name
 # 2. @model_name = Model name
-# 3. #TODO @columns = All columns in the (api_name) table
+# 3. #TODO DOCS
 def get_model(api_name, main_model_name, sub_models, isStoredProcedure):
 
     # Declare Variables
@@ -45,7 +45,11 @@ def get_model(api_name, main_model_name, sub_models, isStoredProcedure):
     for model in sub_models:
 
         # Check need for Keyless, basically check if model has Get, Add or Update in name
-        isKeyless = ("get" in model["name"].lower() or "add" in model["name"].lower() or "update" in model["name"].lower())
+        try:
+            isKeyless = ("get" in model["name"].lower() or "add" in model["name"].lower() or "update" in model["name"].lower())
+        except:
+            isKeyless = ("get" in model["name"].lower() or "add" in model["name"].lower() or "update" in model["name"].lower())
+
         if (isKeyless):
             text += "\t[Keyless]\n"
 
@@ -62,6 +66,22 @@ def get_model(api_name, main_model_name, sub_models, isStoredProcedure):
             # get_name_without_first()
             text += "\t\t[JsonProperty(PropertyName = \"" + column["name"] + "\")]\n" 
             text += "\t\tpublic "+var_type+" "+column["name"]+" { get; set; }\n\n"
+
+        # Write Empty Constructor
+        text += "\t\tpublic "+model["name"]+"(){\n\t\t}\n"
+        
+        # Write Full Constructor
+        text += "\t\tpublic "+model["name"]+"("
+        for index, column in enumerate(model["columns"]):
+            var_type = get_var_type(column["type"])
+            null_safity = "? " if (var_type == "string") else " "
+            text += var_type + null_safity + column["name"]
+            if (index < len(model["columns"])-1):
+                text += ", "
+        text += "){\n"
+        for column in model["columns"]:
+            text += "\t\t\tthis."+column["name"]+" = "+column["name"]+";\n"
+        text += "\t\t}\n"
 
         # Close Model
         text += "\t}\n\n"
@@ -84,6 +104,22 @@ def get_model(api_name, main_model_name, sub_models, isStoredProcedure):
             var_name = model["name"][0].lower() + model["name"][1:]
             text += "\t\t[JsonProperty(PropertyName = \"" + var_name + "\")]\n" 
             text += "\t\tpublic List<"+model["name"]+">? "+ var_name +" { get; set; }\n\n"
+
+        # Write Empty Constructor
+        text += "\t\tpublic "+main_model_name+"(){\n\t\t}\n"
+        
+        # Write Full Constructor
+        text += "\t\tpublic "+main_model_name+"("
+        for index, model in enumerate(sub_models):
+            var_name = model["name"][0].lower() + model["name"][1:]
+            text += "List<"+model["name"]+">? "+var_name
+            if (index < len(sub_models)-1):
+                text += ", "
+        text += "){\n"
+        for model in sub_models:
+            var_name = model["name"][0].lower() + model["name"][1:]
+            text += "\t\t\tthis."+var_name+" = "+var_name+";\n"
+        text += "\t\t}\n"
 
         # Close Model
         text += "\t}\n\n"
@@ -178,16 +214,7 @@ def get_stored_procedure_controller(api_name, db_name, model_name, columns, head
     text += "{\n"
 
     # Set Default Route
-    if (headers == None):
-        text += "\t[Route(\"api/[controller]\")]\n"
-    # Set Route with all headers
-    else:
-        text += "\t[Route(\"api/[controller]/"
-        for index, header in enumerate(headers):
-            text += "{"+header["name"]+"}"
-            if (index < len(headers)-1):
-                text += "/"
-        text += "\")]\n"
+    text += "\t[Route(\"api/[controller]\")]\n"
 
     text += "\t[ApiController]\n"
     text += "\tpublic class " + model_name + "Controller : ControllerBase\n"
@@ -212,7 +239,7 @@ def get_stored_procedure_controller(api_name, db_name, model_name, columns, head
         if (headers != None):
             for index, header in enumerate(headers):
                 type_converted = get_var_type(header["type"])
-                text += type_converted +" "+header["name"]
+                text += type_converted +"? "+header["name"]
                 if (index < len(headers)-1):
                     text += ", "
         text += ")\n"
@@ -257,8 +284,12 @@ def get_stored_procedure_controller(api_name, db_name, model_name, columns, head
             text += "\t\t\twhile (await reader.ReadAsync())\n"
             text += "\t\t\t{\n"
             text += "\t\t\t\t"+var_name+".Add(new "+sub_model["name"]+"(\n"
-            for column in sub_model["columns"]:
-                text += "\t\t\t\t\treader.GetString(\""+column["name"]+"\"),\n" # TODO TYPE GetInt32
+            for index2, column in enumerate(sub_model["columns"]):
+                line = get_multi_query_get_type_line(column["type"], column["name"])
+                text += line 
+                if (index2 < len(sub_models)-1):
+                    text += ","
+                text += "\n"
             text += "\t\t\t\t));\n"
             text += "\t\t\t}\n"
             text += "\n"
@@ -527,7 +558,7 @@ def get_post_stored_procedure_method(model_name, columns):
     text = ""
     var_name = "_"+model_name.lower()
     text += "\t\t[HttpPost]\n"
-    text += "\t\tpublic async Task<ActionResult<Stop>> Post("+model_name+" "+var_name+")\n"
+    text += "\t\tpublic void Post("+model_name+" "+var_name+")\n"
     text += "\t\t{\n"
     text += "\t\t\tFormattableString cmd = $\"EXEC "+model_name
 
@@ -539,8 +570,6 @@ def get_post_stored_procedure_method(model_name, columns):
     text += "\";\n"
 
     text += "\t\t\t_context.Database.ExecuteSqlInterpolated(cmd);\n"
-    text += "\n"
-    text += "\t\t\treturn NoContent();\n"
     text += "\t\t}\n"
     return text
 
@@ -552,7 +581,7 @@ def get_put_stored_procedure_method(model_name, columns):
     text = ""
     var_name = "_"+model_name.lower()
     text += "\t\t[HttpPut]\n"
-    text += "\t\tpublic async Task<ActionResult<Stop>> Put("+model_name+" "+var_name+")\n"
+    text += "\t\tpublic void Put("+model_name+" "+var_name+")\n"
     text += "\t\t{\n"
     text += "\t\t\tFormattableString cmd = $\"EXEC "+model_name
 
@@ -564,8 +593,6 @@ def get_put_stored_procedure_method(model_name, columns):
     text += "\";\n"
 
     text += "\t\t\t_context.Database.ExecuteSqlInterpolated(cmd);\n"
-    text += "\n"
-    text += "\t\t\treturn NoContent();\n"
     text += "\t\t}\n"
     return text
 
@@ -597,7 +624,7 @@ def get_launch_settings(api_name):
     text += "\t\t\"dotnetRunMessages\": true,\n"
     text += "\t\t\"launchBrowser\": true,\n"
     text += "\t\t\"launchUrl\": \"swagger\",\n"
-    text += "\t\t\"applicationUrl\": \"https://0.0.0.0:7005;http://0.0.0.0:5052\",\n"
+    text += "\t\t\"applicationUrl\": \"https://0.0.0.0:7005;http://0.0.0.0:5052;https://localhost:5001;http://localhost:5000;\",\n"
     text += "\t\t\"environmentVariables\": {\n"
     text += "\t\t\"ASPNETCORE_ENVIRONMENT\": \"Development\"\n"
     text += "\t\t}\n"
@@ -709,13 +736,13 @@ def get_project_file():
     text += "\t<PackageReference Include=\"DotNetEnv\" Version=\"2.3.0\" />\n"
     text += "\t<PackageReference Include=\"Microsoft.AspNetCore.Mvc.NewtonsoftJson\" Version=\"6.0.6\" />\n"
     text += "\t<PackageReference Include=\"Microsoft.AspNetCore.Mvc.Versioning\" Version=\"5.0.0\" />\n"
-    text += "\t<PackageReference Include=\"Microsoft.EntityFrameworkCore\" Version=\"6.0.6\" />\n"
-    text += "\t<PackageReference Include=\"Microsoft.EntityFrameworkCore.Design\" Version=\"6.0.6\">\n"
+    text += "\t<PackageReference Include=\"Microsoft.EntityFrameworkCore\" Version=\"6.0.7\" />\n"
+    text += "\t<PackageReference Include=\"Microsoft.EntityFrameworkCore.Design\" Version=\"6.0.7\">\n"
     text += "\t\t<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>\n"
     text += "\t\t<PrivateAssets>all</PrivateAssets>\n"
     text += "\t</PackageReference>\n"
     text += "\t<PackageReference Include=\"Microsoft.EntityFrameworkCore.InMemory\" Version=\"6.0.6\" />\n"
-    text += "\t<PackageReference Include=\"Microsoft.EntityFrameworkCore.SqlServer\" Version=\"6.0.6\" />\n"
+    text += "\t<PackageReference Include=\"Microsoft.EntityFrameworkCore.SqlServer\" Version=\"6.0.7\" />\n"
     text += "\t<PackageReference Include=\"Microsoft.EntityFrameworkCore.Tools\" Version=\"6.0.6\">\n"
     text += "\t\t<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>\n"
     text += "\t\t<PrivateAssets>all</PrivateAssets>\n"
@@ -798,6 +825,23 @@ def get_name_without_first():
         name_without_first = column["name"]
     '''
     pass
+
+
+def get_multi_query_get_type_line(var_type, var_name):
+    types = {
+        "VARCHAR":"\t\t\t\t\treader.GetString(\""+var_name+"\")",
+        "INT":"\t\t\t\t\treader.GetInt32(\""+var_name+"\")",
+        "TIME":"\t\t\t\t\tTimeSpan.Parse(reader.GetValue(\""+var_name+"\").ToString() ?? \"\")",
+        "DATE":"\t\t\t\t\tDateTime.Parse(reader.GetValue(\""+var_name+"\").ToString() ?? \"\")",
+        "DATETIME":"\t\t\t\t\tDateTime.Parse(reader.GetValue(\""+var_name+"\").ToString() ?? \"\")",
+        "BIT":"\t\t\t\t\treader.GetBoolean(\""+var_name+"\")"
+    }
+    result = "\t\t\t\t\treader.GetString(\""+var_name+"\")"
+    try:
+        result = types[var_type.upper()]
+    except:
+        pass
+    return result
 
 
 ### Convert from a selected Db Type a Variable Type to Csharp Variable Type ###
