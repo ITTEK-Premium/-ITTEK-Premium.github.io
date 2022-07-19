@@ -14,7 +14,7 @@ function changeModelType() {
     selectModelType = document.getElementById("selectModelType")
     selectedOption = selectModelType.value
 
-    if (selectedOption == "kotlin") {
+    if (selectedOption == "kotlin" || selectedOption == "kotlin-ktor") {
         document.getElementById("inputPackage").style.display = 'block';
     }
     else {

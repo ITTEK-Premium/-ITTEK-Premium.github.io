@@ -1,14 +1,17 @@
 <html>
+
 <head>
-    
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="css/style.css">
     <!--<link rel="stylesheet" href="https://pyscript.net/alpha/pyscript.css"/>-->
 
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" ></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.min.js" integrity="sha384-Atwg2Pkwv9vp0ygtn1JAojH0nYbwNJLPhwyoVbhoPwBhjQPR5VtM2+xf0Uwh9KtT" crossorigin="anonymous"></script>
-    
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.min.js"
+        integrity="sha384-Atwg2Pkwv9vp0ygtn1JAojH0nYbwNJLPhwyoVbhoPwBhjQPR5VtM2+xf0Uwh9KtT" crossorigin="anonymous">
+    </script>
+
     <script src="js_scripts/FileSaver.js/dist/FileSaver.js"></script>
     <script type="text/javascript" src="js_scripts/jszip.min.js"></script>
     <script type="text/javascript" src="js_scripts/prism.js"></script>
@@ -17,7 +20,7 @@
 
     <script src="https://unpkg.com/custom-syntax-highlighter@latest/bin/index.js"></script>
     <script>
-      var highlight = window.csHighlight; //need to initialize the library
+        var highlight = window.csHighlight; //need to initialize the library
     </script>
 
 </head>
@@ -26,14 +29,14 @@
 
     <nav class="navbar navbar-expand-sm bg-light navbar-light">
         <ul class="navbar-nav">
-          <li class="nav-item active">
-            <a class="nav-link" href="index.html">Model Maker</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="pages/api-maker.html">API Maker</a>
-          </li>
+            <li class="nav-item active">
+                <a class="nav-link" href="index.html">Model Maker</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="pages/api-maker.html">API Maker</a>
+            </li>
         </ul>
-      </nav>
+    </nav>
 
     <div class="container">
 
@@ -42,88 +45,94 @@
         </div>
 
         <div class="row">
-            <div style="height: 200px;">
-                <textarea placeholder="Insert Json" id="insertJsonArea" spellcheck="false" oninput="updateJson(this.value); sync_scroll(this);" onscroll="sync_scroll(this);" onkeydown="check_tab(this, event);"></textarea>
 
-                <pre id="highlighting-json" aria-hidden="true">
-                    <code class="language-json" id="highlighting-content-json">        
-                    </code>
-                </pre>
-            </div>
-        </div>
-
-        <div class="row" style="position: absolute; top: 330; left: 0; right: 0; margin-left: auto; margin-right: auto; width: 70%;">
-            <div class="col-1">
-                <button id="convertButton" class="btn btn-primary">Generate</button> 
+            <div class="api-maker-div">
+                <input id="inputClassName" class="form-control" placeholder="Class Name">
             </div>
 
-            <div class="col-2">
-                <input id="inputClassName" class="form-control" placeholder="Class Name" value="default">
-            </div>
-
-            <div class="col-2">
+            <div class="api-maker-div">
                 <select id="selectModelType" class="form-select" onchange="changeModelType()">
-                    <option selected>Select Model Type</option>
+                    <option >Select Model Type</option>
                     <option value="flutter">Dart</option>
                     <option value="kotlin">Kotlin</option>
+                    <option selected value="kotlin-ktor">Kotlin with Ktor</option>
                 </select>
             </div>
-
-            <div class="col-2">
-                <button id="copyClipboard" class="btn btn-secondary" onclick="copyToClipBoard()">Copy code to clipboard</button>
+            
+            <div class="api-maker-div">
+                <input id="inputPackage" class="form-control" placeholder="Package" value="com.default.default" style="display: none;">    
             </div>
 
-            <div class="col-2">
-                <button type="button" id="downloadButton" class="btn btn-success">
+            <div style="text-align: center; margin-top: 2%;">
+                
+                <button id="convertButton" class="btn btn-primary">Generate</button> 
+          
+                <button id="copyClipboard" class="btn btn-secondary" style="margin-left: 5%;" onclick="copyToClipBoard()">Copy code to clipboard</button>
+        
+                <button type="button" id="downloadButton" class="btn btn-success" style="margin-left: 5%;">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-download" viewBox="0 0 16 16">
                         <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"></path>
                         <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"></path>
                     </svg>
                     Download All
                 </button>
+
             </div>
+
+            <div id="tabMenu" class="tab nav">
+            </div>
+        </div>
+
+        <div class="row">
+
+            <textarea placeholder="Insert Json" id="insertJsonArea" spellcheck="false"
+                oninput="updateJson(this.value); sync_scroll(this);" onscroll="sync_scroll(this);"
+                onkeydown="check_tab(this, event);"></textarea>
+
+            <pre id="highlighting-json" aria-hidden="true">
+                <code class="language-json" id="highlighting-content-json">        
+                </code>
+            </pre>
+
             
 
-            <div class="col-3">
-                <input id="inputPackage" class="form-control" placeholder="Package" value="com.default.default" style="display: none;">
-            </div>
+            <textarea placeholder="Insert Dart" id="textAreaResult" spellcheck="false"
+                oninput="updateDart(this.value); sync_scroll_dart(this);" onscroll="sync_scroll_dart(this);"
+                onkeydown="check_tab(this, event);"></textarea>
+
+            <pre id="highlighting-dart" aria-hidden="true">
+                <code class="language-dart" id="highlighting-content-dart">        
+                </code>
+            </pre>
 
         </div>
 
         <div class="row">
-            
-            <!--
-            <textarea id="textAreaResult" class="tabcontent" rows="15" placeholder="Nothing here" style="display: block;"></textarea> -->
-            
-            <div id="tabMenu" class="tab nav">
-            </div>
 
-            <div>
-                
-                <textarea placeholder="Insert Dart" id="textAreaResult" spellcheck="false" oninput="updateDart(this.value); sync_scroll_dart(this);" onscroll="sync_scroll_dart(this);" onkeydown="check_tab(this, event);"></textarea>
-
-                <pre id="highlighting-dart" aria-hidden="true">
-                    <code class="language-dart" id="highlighting-content-dart">        
-                    </code>
-                </pre>
-            </div>
+      
+            
 
         </div>
+
+
+        
+
 
     </div>
 
     <py-env>
         - paths:
-            - ./py_scripts/convertJsonToModel/convertJsonToModel.py
-            - ./py_scripts/convertJsonToModel/convertToFlutter.py
-            - ./py_scripts/convertJsonToModel/convertToKotlin.py
-            - ./py_scripts/convertJsonToModel/tabManager.py
-            - ./py_scripts/convertJsonToModel/utils.py
+            - ./py_scripts/modelMaker/modelMaker.py
+            - ./py_scripts/modelMaker/convertToFlutter.py
+            - ./py_scripts/modelMaker/convertToKotlin.py
+            - ./py_scripts/modelMaker/convertToKotlinKtor.py
+            - ./py_scripts/modelMaker/tabManager.py
+            - ./py_scripts/modelMaker/utils.py
     </py-env>
     <py-script>
         from js import document
         from pyodide import create_proxy
-        from convertJsonToModel import convert_json, download_files
+        from modelMaker import convert_json, download_files
 
         convertButton = document.getElementById('convertButton')
         downloadButton = document.getElementById('downloadButton')
@@ -136,5 +145,6 @@
 
     </py-script>
 
- </body>
+</body>
+
 </html>

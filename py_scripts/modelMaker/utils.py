@@ -55,7 +55,12 @@ def get_json_in_element(elementName): # insertJsonArea
     
 
 def get_class_name():
-    return js.document.getElementById("inputClassName").value
+    value = js.document.getElementById("inputClassName").value
+
+    if (value == ""):
+        value = "Default"
+
+    return value
 
 
 def get_package_name():

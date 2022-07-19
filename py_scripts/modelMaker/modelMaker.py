@@ -1,6 +1,7 @@
 from utils import *
-from convertToFlutter import get_flutter_code
-from convertToKotlin import get_kotlin_code
+import convertToFlutter
+import convertToKotlin
+import convertToKotlinKtor
 from tabManager import create_tabs, get_tabs
 
 # Main function of the convert json to model functionality
@@ -11,14 +12,18 @@ def convert_json(event):
     selected_option = get_selected_option()
 
     # Create Tabs
-    create_tabs(selected_tab, selected_option, convert_json)
+    try:
+        create_tabs(selected_tab, selected_option, convert_json)
+    except:
+        pass
 
     # Get Code
     if (selected_option == "flutter"):
-        set_result(get_flutter_code(selected_tab))
+        set_result(convertToFlutter.get_flutter_code(selected_tab))
     elif (selected_option == "kotlin"):
-        set_result(get_kotlin_code(selected_tab))
-
+        set_result(convertToKotlin.get_kotlin_code(selected_tab))
+    elif (selected_option == "kotlin-ktor"):
+        set_result(convertToKotlinKtor.get_kotlin_code(selected_tab))
 
 def download_files(event):
 
@@ -31,13 +36,13 @@ def download_files(event):
     
     # Download All class
     if (len(tabs) != 0):
-        code = get_flutter_code("all") if (selected_option == "flutter") else get_kotlin_code("all")
+        code = convertToFlutter.get_flutter_code("all") if (selected_option == "flutter") else get_kotlin_code("all")
         filename = class_name + extension
         files.append({"filename": str(filename), "code": str(code)})
 
     # Download Main class
-    code = get_flutter_code(class_name) if (selected_option == "flutter") else get_kotlin_code(class_name)
-    code = get_flutter_code(class_name)
+    code = convertToFlutter.get_flutter_code(class_name) if (selected_option == "flutter") else get_kotlin_code(class_name)
+    code = convertToFlutter.get_flutter_code(class_name)
     
     if (len(tabs) != 0):
         filename = class_name + " (base class)" + extension
@@ -48,13 +53,13 @@ def download_files(event):
 
     # Donwload Service
     if (selected_option == "flutter"):
-        code = get_flutter_code("service")
+        code = convertToFlutter.get_flutter_code("service")
         filename = "Service" + extension
         files.append({"filename": str(filename), "code": str(code)})
 
     # Download Sub classes
     for tab in tabs: 
-        code = get_flutter_code(tab["name"]) if (selected_option == "flutter") else get_kotlin_code(tab["name"])
+        code = convertToFlutter.get_flutter_code(tab["name"]) if (selected_option == "flutter") else convertToFlutter.get_kotlin_code(tab["name"])
         filename = tab["name"] + extension
         files.append({"filename": str(filename), "code": str(code)})
 

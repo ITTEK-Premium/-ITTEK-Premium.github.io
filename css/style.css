@@ -86,10 +86,8 @@
   /* In the same place */
   position: absolute; 
   left: 0; 
-  right: 0; 
-  margin-left: auto; 
-  margin-right: auto; 
-  width: 70%;
+  width: 30%;
+  height: 80%;
   border: 1px solid #ccc;
 }
 
@@ -145,24 +143,20 @@
     
   #textAreaResult, #highlighting-dart {
     /* In the same place */
-    position: absolute; 
+    position: absolute;
     left: 0; 
-    right: 0; 
-    top: 500;
-    margin-left: auto; 
+
+    margin-left: 35%;
     margin-right: auto; 
-    width: 70%;
+    width: 60%;
+    height: 80%;
     border: 1px solid #ccc;
   }
   
   #tabMenu {
-    position: absolute; 
-    left: 0; 
-    right: 0; 
-    top: 455;
-    margin-left: auto; 
-    margin-right: auto; 
-    width: 70%;
+    text-align: center;
+    margin-top: 2%;
+    width: 100%;
   }
   
   /* Move the textarea in front of the result */
