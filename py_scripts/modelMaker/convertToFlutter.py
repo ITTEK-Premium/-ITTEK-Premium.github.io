@@ -12,24 +12,37 @@ def get_flutter_code(selected_tab):
     full_code = ""
 
     # Generate List Code
-    for tab in tabs:
-        try:
-            full_code += generate_flutter_model_code(tab["name"], tab["body"])
-        except:
-            full_code += generate_flutter_model_code(tab["name"], tab["body"])
-
-    # Generate Base Code
-    if (selected_tab == class_name):
-        full_code = generate_flutter_model_code(class_name, data)
-    elif (selected_tab == "all"):
-        full_code += generate_flutter_all_model_code(class_name, data)
-    elif (selected_tab == "service"):
-        full_code = generate_flutter_get_service(class_name)
-    else:
-        # Find Class inside json
+    try:
         for tab in tabs:
-            if (tab["name"] == selected_tab):
-                full_code = generate_flutter_model_code(tab["name"], tab["body"])
+            try:
+                full_code += generate_flutter_model_code(tab["name"], tab["body"])
+            except:
+                full_code += generate_flutter_model_code(tab["name"], tab["body"])
+
+        # Generate Base Code
+        if (selected_tab == class_name):
+            full_code = generate_flutter_model_code(class_name, data)
+        elif (selected_tab == "all"):
+            full_code += generate_flutter_all_model_code(class_name, data)
+        elif (selected_tab == "service"):
+            full_code = generate_flutter_get_service(class_name)
+        else:
+            # Find Class inside json
+            for tab in tabs:
+                if (tab["name"] == selected_tab):
+                    full_code = generate_flutter_model_code(tab["name"], tab["body"])
+    except:
+        for item in data[0]:
+            if (get_item_type(data[0][item]) == "list"):
+                fullCode += generate_flutter_model_code(item, data[0][item][0])
+
+        # Generate Base Code
+        if (selected_tab == class_name):
+            fullCode = generate_flutter_model_code(class_name, data[0])
+        elif (selected_tab == "all"):
+            fullCode += generate_flutter_all_model_code(class_name, data[0])
+        else:
+            fullCode = generate_flutter_model_code(selected_tab, data[0][selected_tab][0])
 
     return full_code
 

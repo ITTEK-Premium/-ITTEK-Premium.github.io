@@ -10,17 +10,31 @@ def get_kotlin_code(selectedTab):
     fullCode = generate_imports(packageName)
     
     # Generate List Code
-    for item in data:
-        if (get_item_type(data[item]) == "list"):
-            fullCode += generate_kotlin_model_code(item, data[item][0])
+    try:
+        for item in data:
+            if (get_item_type(data[item]) == "list"):
+                fullCode += generate_kotlin_model_code(item, data[item][0])
 
-    # Generate Base Code
-    if (selectedTab == className):
-        fullCode = generate_kotlin_model_code(className, data)
-    elif (selectedTab == "all"):
-        fullCode += generate_kotlin_all_model_code(className, data)
-    else:
-        fullCode = generate_kotlin_model_code(selectedTab, data[selectedTab][0])
+        # Generate Base Code
+        if (selectedTab == className):
+            fullCode = generate_kotlin_model_code(className, data)
+        elif (selectedTab == "all"):
+            fullCode += generate_kotlin_all_model_code(className, data)
+        else:
+            fullCode = generate_kotlin_model_code(selectedTab, data[selectedTab][0])
+    except:
+        for item in data[0]:
+            if (get_item_type(data[0][item]) == "list"):
+                fullCode += generate_kotlin_model_code(item, data[0][item][0])
+
+        # Generate Base Code
+        if (selectedTab == className):
+            fullCode = generate_kotlin_model_code(className, data[0])
+        elif (selectedTab == "all"):
+            fullCode += generate_kotlin_all_model_code(className, data[0])
+        else:
+            fullCode = generate_kotlin_model_code(selectedTab, data[0][selectedTab][0])
+
 
     return fullCode
 
