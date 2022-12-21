@@ -46,9 +46,9 @@ def get_model(api_name, main_model_name, sub_models, isStoredProcedure):
 
         # Check need for Keyless, basically check if model has Get, Add or Update in name
         try:
-            isKeyless = ("get" in model["name"].lower() or "add" in model["name"].lower() or "update" in model["name"].lower())
+            isKeyless = ("get" in model["name"].lower() or "search" in model["name"].lower() or "add" in model["name"].lower() or "update" in model["name"].lower())
         except:
-            isKeyless = ("get" in model["name"].lower() or "add" in model["name"].lower() or "update" in model["name"].lower())
+            isKeyless = ("get" in model["name"].lower() or "search" in model["name"].lower() or "add" in model["name"].lower() or "update" in model["name"].lower())
 
         if (isKeyless):
             text += "\t[Keyless]\n"
@@ -89,7 +89,7 @@ def get_model(api_name, main_model_name, sub_models, isStoredProcedure):
     # Create Main Model to concatenate every model if necessary
     if (len(sub_models) > 1):
         # Check need for Keyless, basically check if model has Get, Add or Update in name
-        isKeyless = ("get" in main_model_name.lower() or "add" in main_model_name.lower() or "update" in main_model_name.lower())
+        isKeyless = ("get" in main_model_name.lower() or "search" in main_model_name.lower() or "add" in main_model_name.lower() or "update" in main_model_name.lower())
         if (isKeyless):
             text += "\t[Keyless]\n"
 
@@ -317,6 +317,8 @@ def get_stored_procedure_controller(api_name, db_name, model_name, columns, head
         # Get Stored Procedure Type (SELECT, INSERT, UPDATE, DELETE) # TODO DELETE
         method_code = ""
         if ("get" in model_name.lower()):
+            method_code = get_get_stored_procedure_method(model_name, headers)
+        elif ("search" in model_name.lower()):
             method_code = get_get_stored_procedure_method(model_name, headers)
         elif ("add" in model_name.lower()):
             method_code = get_post_stored_procedure_method(model_name, columns)
